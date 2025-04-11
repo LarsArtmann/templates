@@ -26,6 +26,11 @@ on:
         type: boolean
         default: false
 
+# Add permissions section
+permissions:
+  issues: write  # Required for managing labels
+  contents: read # Required for checking out code
+
 jobs:
   validate-input:
     name: Validate User Input
