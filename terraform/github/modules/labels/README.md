@@ -50,6 +50,19 @@ To run the workflow:
 7. Optionally enable dry run mode to preview changes without applying them
 8. Click "Run workflow"
 
+### Token Configuration
+
+The workflow supports two authentication methods:
+
+1. **Default GitHub Token**: By default, the workflow uses the `GITHUB_TOKEN` provided by GitHub Actions. This token has access only to the current repository and the permissions defined in the workflow.
+
+2. **Custom Token**: For broader access (e.g., to manage labels across multiple repositories), you can provide a Personal Access Token (PAT) with the appropriate permissions:
+   - Create a PAT with `repo` scope at https://github.com/settings/tokens
+   - Add it as a repository secret named `WORKFLOW_ACTION_LABELS_GITHUB_TOKEN`
+   - The workflow will automatically use this token if available
+
+If the `WORKFLOW_ACTION_LABELS_GITHUB_TOKEN` secret is not provided, the workflow will fall back to using the default `GITHUB_TOKEN`.
+
 ## Requirements
 
 | Name | Version |
