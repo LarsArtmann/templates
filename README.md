@@ -27,15 +27,31 @@ templates/
 ├── README.md (this file)
 ├── LICENSE (European Union Public Licence v1.2)
 ├── .gitignore
+├── .github/
+│   └── workflows/ (GitHub Actions workflows)
+├── terraform/
+│   ├── github/ (GitHub-related Terraform modules)
+│   └── README.md (Terraform modules documentation)
 └── github/
     └── README.md (GitHub-specific templates and automation)
 ```
+
+## Available Tools
+
+### Terraform Modules
+
+- **[GitHub Labels](terraform/github/modules/labels)**: Terraform module for implementing a standardized GitHub label system across repositories
+
+### GitHub Actions Workflows
+
+- **[GitHub Labels](/.github/workflows/github-labels.yml)**: Workflow for automatically applying standardized labels to repositories
 
 ## Related Issues
 
 - [LarsArtmann/mono#42](https://github.com/LarsArtmann/mono/issues/42) - LarsArtmann/templates Project: Centralized Repository for Best Practices and Automation
 - [LarsArtmann/mono#38](https://github.com/LarsArtmann/mono/issues/38) - Implement standardized GitHub labels across all repositories with Terraform
 - [LarsArtmann/mono#50](https://github.com/LarsArtmann/mono/issues/50) - Update templates repository to use European Union Public Licence (EUPL) v1.2
+- [LarsArtmann/templates#4](https://github.com/LarsArtmann/templates/issues/4) - GitHub Actions Workflow for Automated Label Management
 
 ## Next Steps
 
