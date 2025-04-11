@@ -26,7 +26,7 @@ on:
         type: boolean
         default: false
 
-# Add permissions section
+# Add permissions section for the default GITHUB_TOKEN
 permissions:
   issues: write  # Required for managing labels
   contents: read # Required for checking out code
@@ -105,9 +105,12 @@ jobs:
         run: |
           cd terraform/github/examples/labels
           
+          # Use custom token if provided, otherwise fall back to GITHUB_TOKEN
+          TOKEN="${{ secrets.WORKFLOW_ACTION_LABELS_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}"
+          
           # Create terraform.tfvars file
           cat > terraform.tfvars << EOF
-          github_token = "${{ secrets.GITHUB_TOKEN }}"
+          github_token = "$TOKEN"
           github_owner = "${{ github.repository_owner }}"
           EOF
           
@@ -156,7 +159,8 @@ jobs:
           cd terraform/github/examples/labels
           terraform apply -auto-approve tfplan
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use custom token if provided, otherwise fall back to GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTION_LABELS_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
       
       - name: Dry Run Notice
         if: ${{ github.event.inputs.dry_run == 'true' }}
