@@ -12,6 +12,8 @@ This Terraform module implements a consistent set of GitHub labels across reposi
 
 ## Usage
 
+### Manual Usage
+
 ```hcl
 module "github_labels" {
   source = "github.com/LarsArtmann/templates//terraform/github/modules/labels"
@@ -33,6 +35,20 @@ module "github_labels" {
   }
 }
 ```
+
+### Automated Usage
+
+This module can be automatically applied to repositories using the [GitHub Labels workflow](../../../../.github/workflows/github-labels.yml).
+
+To run the workflow:
+1. Go to the Actions tab in the repository
+2. Select the "Apply Standardized GitHub Labels" workflow
+3. Click "Run workflow"
+4. Enter the repositories you want to update (or leave empty to use defaults)
+5. Choose whether to include private repositories from secrets
+6. Type "YES" to confirm
+7. Optionally enable dry run mode to preview changes without applying them
+8. Click "Run workflow"
 
 ## Requirements
 

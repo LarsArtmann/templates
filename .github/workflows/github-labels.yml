@@ -1,0 +1,169 @@
+name: Apply Standardized GitHub Labels
+
+on:
+  workflow_dispatch:
+    inputs:
+      repositories:
+        description: 'Comma-separated list of public repositories to update (leave empty to use defaults)'
+        required: false
+        default: 'mono,LarsArtmann,Setup-Mac,templates'
+        type: string
+      
+      use_private_repos:
+        description: 'Include repositories from secrets'
+        required: false
+        type: boolean
+        default: false
+      
+      confirm:
+        description: 'Type "YES" to confirm you want to apply these changes'
+        required: true
+        type: string
+      
+      dry_run:
+        description: 'Run in dry-run mode (no changes will be made)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  validate-input:
+    name: Validate User Input
+    runs-on: ubuntu-latest
+    outputs:
+      public_repos: ${{ steps.parse.outputs.public_repos }}
+      private_repos: ${{ steps.parse.outputs.private_repos }}
+      all_repos: ${{ steps.parse.outputs.all_repos }}
+    steps:
+      - name: Check Confirmation
+        if: ${{ github.event.inputs.confirm != 'YES' }}
+        run: |
+          echo "Error: You must type 'YES' (all caps) to confirm the changes."
+          exit 1
+      
+      - name: Parse Repositories
+        id: parse
+        run: |
+          # Get public repositories from input
+          PUBLIC_REPOS="${{ github.event.inputs.repositories }}"
+          
+          # Get private repositories from secrets if enabled
+          PRIVATE_REPOS=""
+          if [[ "${{ github.event.inputs.use_private_repos }}" == "true" ]]; then
+            PRIVATE_REPOS="${{ secrets.PRIVATE_REPOSITORIES }}"
+            echo "Including repositories from secrets"
+          fi
+          
+          # Combine repositories
+          ALL_REPOS="${PUBLIC_REPOS}"
+          if [[ -n "${PRIVATE_REPOS}" ]]; then
+            if [[ -n "${ALL_REPOS}" ]]; then
+              ALL_REPOS="${ALL_REPOS},${PRIVATE_REPOS}"
+            else
+              ALL_REPOS="${PRIVATE_REPOS}"
+            fi
+          fi
+          
+          # Convert comma-separated list to array
+          IFS=',' read -ra REPOS <<< "${ALL_REPOS}"
+          
+          # Check if any repositories were provided
+          if [ ${#REPOS[@]} -eq 0 ]; then
+            echo "Error: No repositories specified."
+            exit 1
+          fi
+          
+          # Output the repositories for later steps
+          echo "public_repos=${PUBLIC_REPOS}" >> $GITHUB_OUTPUT
+          echo "private_repos=${PRIVATE_REPOS}" >> $GITHUB_OUTPUT
+          echo "all_repos=${ALL_REPOS}" >> $GITHUB_OUTPUT
+          
+          echo "Will apply labels to the following repositories:"
+          for repo in "${REPOS[@]}"; do
+            echo "- $repo"
+          done
+  
+  apply-labels:
+    name: Apply Standardized Labels
+    needs: validate-input
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.4  # Latest stable version
+      
+      - name: Configure Terraform
+        run: |
+          cd terraform/github/examples/labels
+          
+          # Create terraform.tfvars file
+          cat > terraform.tfvars << EOF
+          github_token = "${{ secrets.GITHUB_TOKEN }}"
+          github_owner = "${{ github.repository_owner }}"
+          EOF
+          
+          # Add public repositories
+          if [[ -n "${{ needs.validate-input.outputs.public_repos }}" ]]; then
+            echo "public_repositories = [" >> terraform.tfvars
+            IFS=',' read -ra REPOS <<< "${{ needs.validate-input.outputs.public_repos }}"
+            for repo in "${REPOS[@]}"; do
+              echo "  \"$repo\"," >> terraform.tfvars
+            done
+            echo "]" >> terraform.tfvars
+          else
+            echo "public_repositories = []" >> terraform.tfvars
+          fi
+          
+          # Add private repositories
+          if [[ -n "${{ needs.validate-input.outputs.private_repos }}" ]]; then
+            echo "private_repositories = [" >> terraform.tfvars
+            IFS=',' read -ra REPOS <<< "${{ needs.validate-input.outputs.private_repos }}"
+            for repo in "${REPOS[@]}"; do
+              echo "  \"$repo\"," >> terraform.tfvars
+            done
+            echo "]" >> terraform.tfvars
+          else
+            echo "private_repositories = []" >> terraform.tfvars
+          fi
+      
+      - name: Terraform Init
+        run: |
+          cd terraform/github/examples/labels
+          terraform init
+      
+      - name: Terraform Plan
+        id: plan
+        run: |
+          cd terraform/github/examples/labels
+          terraform plan -out=tfplan
+          
+          # Show the plan
+          echo "Terraform Plan Output:"
+          terraform show -no-color tfplan
+      
+      - name: Terraform Apply
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          cd terraform/github/examples/labels
+          terraform apply -auto-approve tfplan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Dry Run Notice
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        run: |
+          echo "DRY RUN MODE: No changes were applied. The plan above shows what would have changed."
+      
+      - name: Report Results
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          cd terraform/github/examples/labels
+          echo "Labels successfully applied to repositories:"
+          echo "${{ needs.validate-input.outputs.all_repos }}"
+          
+          echo "Total labels created/updated:"
+          terraform output label_count
