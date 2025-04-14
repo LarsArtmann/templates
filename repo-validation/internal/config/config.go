@@ -26,6 +26,36 @@ type FileRequirement struct {
 	TemplatePath string
 }
 
+// FileRequirementList represents a list of file requirements with helper methods
+type FileRequirementList []FileRequirement
+
+// GetAllFileRequirements returns all file requirements
+func GetAllFileRequirements() FileRequirementList {
+	return append(GetMustHaveFiles(), GetShouldHaveFiles()...)
+}
+
+// FilterByPriority returns file requirements with the specified priority
+func (list FileRequirementList) FilterByPriority(priority string) FileRequirementList {
+	var filtered FileRequirementList
+	for _, req := range list {
+		if req.Priority == priority {
+			filtered = append(filtered, req)
+		}
+	}
+	return filtered
+}
+
+// FilterByCategory returns file requirements with the specified category
+func (list FileRequirementList) FilterByCategory(category string) FileRequirementList {
+	var filtered FileRequirementList
+	for _, req := range list {
+		if req.Category == category {
+			filtered = append(filtered, req)
+		}
+	}
+	return filtered
+}
+
 // GetMustHaveFiles returns the list of files that must be present in a repository
 func GetMustHaveFiles() []FileRequirement {
 	return []FileRequirement{

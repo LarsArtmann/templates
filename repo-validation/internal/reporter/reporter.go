@@ -40,21 +40,18 @@ func (r *Reporter) ReportResults(results []checker.ValidationResult) error {
 	if r.Config.JSONOutput {
 		return r.reportResultsJSON(results)
 	}
-	
+
 	return r.reportResultsConsole(results)
 }
 
-// reportResultsConsole reports the validation results to the console
-func (r *Reporter) reportResultsConsole(results []checker.ValidationResult) error {
-	var missingMustHave, missingShouldHave []string
-	var errors []string
-	
+// processResults extracts information about missing files and errors from validation results
+func (r *Reporter) processResults(results []checker.ValidationResult) (missingMustHave, missingShouldHave, errors []string) {
 	for _, result := range results {
 		if result.Error != nil {
 			errors = append(errors, fmt.Sprintf("%s: %s", result.Requirement.Path, result.Error))
 			continue
 		}
-		
+
 		if !result.Exists {
 			if result.Requirement.Priority == "Must-have" {
 				missingMustHave = append(missingMustHave, result.Requirement.Path)
@@ -63,17 +60,23 @@ func (r *Reporter) reportResultsConsole(results []checker.ValidationResult) erro
 			}
 		}
 	}
-	
+	return missingMustHave, missingShouldHave, errors
+}
+
+// reportResultsConsole reports the validation results to the console
+func (r *Reporter) reportResultsConsole(results []checker.ValidationResult) error {
+	missingMustHave, missingShouldHave, errors := r.processResults(results)
+
 	// Print summary
 	log.Info("Repository Validation Results")
 	log.Info("===========================")
-	
+
 	if len(missingMustHave) == 0 && len(errors) == 0 {
 		log.Info("✓ All must-have files are present", "status", "success")
 	} else {
 		log.Error("✗ Some must-have files are missing", "status", "failed")
 	}
-	
+
 	// Print missing must-have files
 	if len(missingMustHave) > 0 {
 		log.Error("Missing must-have files:")
@@ -81,7 +84,7 @@ func (r *Reporter) reportResultsConsole(results []checker.ValidationResult) erro
 			log.Error("  - " + file)
 		}
 	}
-	
+
 	// Print missing should-have files
 	if len(missingShouldHave) > 0 {
 		log.Warn("Missing should-have files:")
@@ -89,7 +92,7 @@ func (r *Reporter) reportResultsConsole(results []checker.ValidationResult) erro
 			log.Warn("  - " + file)
 		}
 	}
-	
+
 	// Print errors
 	if len(errors) > 0 {
 		log.Error("Errors:")
@@ -97,91 +100,69 @@ func (r *Reporter) reportResultsConsole(results []checker.ValidationResult) erro
 			log.Error("  - " + err)
 		}
 	}
-	
+
 	// Print fix message
 	if (len(missingMustHave) > 0 || len(missingShouldHave) > 0) && !r.Config.Fix {
 		log.Info("Run with --fix to generate missing files")
 	}
-	
+
 	return nil
 }
 
 // reportResultsJSON reports the validation results in JSON format
 func (r *Reporter) reportResultsJSON(results []checker.ValidationResult) error {
-	var missingMustHave, missingShouldHave []string
-	var errors []string
-	
-	for _, result := range results {
-		if result.Error != nil {
-			errors = append(errors, fmt.Sprintf("%s: %s", result.Requirement.Path, result.Error))
-			continue
-		}
-		
-		if !result.Exists {
-			if result.Requirement.Priority == "Must-have" {
-				missingMustHave = append(missingMustHave, result.Requirement.Path)
-			} else if result.Requirement.Priority == "Should-have" {
-				missingShouldHave = append(missingShouldHave, result.Requirement.Path)
-			}
-		}
-	}
-	
+	missingMustHave, missingShouldHave, errors := r.processResults(results)
+
 	jsonResult := JSONResult{
 		Success:              len(missingMustHave) == 0 && len(errors) == 0,
 		MissingMustHaveFiles: missingMustHave,
 		MissingShouldHaveFiles: missingShouldHave,
 		Errors:               errors,
 	}
-	
+
 	jsonData, err := json.MarshalIndent(jsonResult, "", "  ")
 	if err != nil {
 		return fmt.Errorf("error marshaling JSON: %w", err)
 	}
-	
+
 	fmt.Println(string(jsonData))
-	
+
 	return nil
 }
 
 // GetSummary returns a summary of the validation results
 func (r *Reporter) GetSummary(results []checker.ValidationResult) string {
-	var missingMustHave, missingShouldHave []string
+	// Note: We're using a simplified version of processResults here because
+	// we only need the path for errors, not the full error message
+	missingMustHave, missingShouldHave, _ := r.processResults(results)
+
+	// Extract just the paths for errors
 	var errors []string
-	
 	for _, result := range results {
 		if result.Error != nil {
 			errors = append(errors, result.Requirement.Path)
-			continue
-		}
-		
-		if !result.Exists {
-			if result.Requirement.Priority == "Must-have" {
-				missingMustHave = append(missingMustHave, result.Requirement.Path)
-			} else if result.Requirement.Priority == "Should-have" {
-				missingShouldHave = append(missingShouldHave, result.Requirement.Path)
-			}
 		}
 	}
-	
+
 	var summary strings.Builder
-	
+
 	if len(missingMustHave) == 0 && len(errors) == 0 {
 		summary.WriteString("All must-have files are present")
 	} else {
 		summary.WriteString("Some must-have files are missing")
 	}
-	
+
 	if len(missingMustHave) > 0 {
 		summary.WriteString(fmt.Sprintf(". Missing must-have files: %s", strings.Join(missingMustHave, ", ")))
 	}
-	
+
 	if len(missingShouldHave) > 0 {
 		summary.WriteString(fmt.Sprintf(". Missing should-have files: %s", strings.Join(missingShouldHave, ", ")))
 	}
-	
+
 	if len(errors) > 0 {
 		summary.WriteString(fmt.Sprintf(". Errors: %s", strings.Join(errors, ", ")))
 	}
-	
+
 	return summary.String()
 }
