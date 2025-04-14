@@ -37,14 +37,9 @@ func NewChecker(cfg *config.Config) *Checker {
 func (c *Checker) CheckRepository() ([]ValidationResult, error) {
 	var results []ValidationResult
 
-	// Check must-have files
-	for _, req := range config.GetMustHaveFiles() {
-		result := c.checkFile(req)
-		results = append(results, result)
-	}
-
-	// Check should-have files
-	for _, req := range config.GetShouldHaveFiles() {
+	// Check all files using the consolidated list
+	allRequirements := config.GetAllFileRequirements()
+	for _, req := range allRequirements {
 		result := c.checkFile(req)
 		results = append(results, result)
 	}
