@@ -105,6 +105,24 @@ func (c *Checker) generateFile(req config.FileRequirement) error {
 		return fmt.Errorf("error reading template %s: %w", req.TemplatePath, err)
 	}
 
+	// Parse template
+	tmpl, err := template.New(req.Path).Parse(string(templateContent))
+	if err != nil {
+		return fmt.Errorf("error parsing template %s: %w", req.TemplatePath, err)
+	}
+
+	// Prepare template data
+	data := map[string]interface{}{
+		"RepoName": filepath.Base(c.Config.RepoPath),
+		// Add more variables as needed
+	}
+
+	// Render template to buffer
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return fmt.Errorf("error executing template %s: %w", req.TemplatePath, err)
+	}
+
 	// Create the output file
 	outputPath := filepath.Join(c.Config.RepoPath, req.Path)
 
@@ -114,7 +132,7 @@ func (c *Checker) generateFile(req config.FileRequirement) error {
 	}
 
 	// Write the file
-	if err := os.WriteFile(outputPath, templateContent, 0644); err != nil {
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
 		return fmt.Errorf("error writing file %s: %w", req.Path, err)
 	}
 
