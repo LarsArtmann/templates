@@ -1,9 +1,11 @@
 package checker
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
 )
