@@ -52,6 +52,9 @@ func main() {
 	if err := validateCmd.Execute(); err != nil {
 		if !cfg.JSONOutput {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		} else {
+			// Output error in JSON format
+			fmt.Printf("{\"error\": \"%s\"}\n", err.Error())
 		}
 		os.Exit(1)
 	}
