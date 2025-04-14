@@ -33,6 +33,16 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error resolving repository path: %v\n", err)
 		os.Exit(1)
 	}
+	// Check if the path exists and is a directory
+	stat, err := os.Stat(absPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error accessing repository path: %v\n", err)
+		os.Exit(1)
+	}
+	if !stat.IsDir() {
+		fmt.Fprintf(os.Stderr, "Repository path is not a directory: %s\n", absPath)
+		os.Exit(1)
+	}
 	cfg.RepoPath = absPath
 	
 	// Create the validate command
