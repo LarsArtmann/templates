@@ -81,7 +81,15 @@ repo-validate --version
 - `--devcontainer`: Check DevContainer related files (.devcontainer.json)
 - `--devenv`: Check DevEnv related files (devenv.nix)
 
-By default, only the core files (README.md, LICENSE.md, .gitignore, SECURITY.md) are checked. Use the file group options to check additional files.
+## Default Behavior
+
+**By default, only the core files are checked:**
+- README.md
+- LICENSE.md
+- .gitignore
+- SECURITY.md
+
+Use the file group options described above to check additional files.
 
 ### Interactive Mode
 
@@ -242,6 +250,10 @@ jobs:
 
       - name: Validate repository
         run: repo-validate --all
+
+      # Or for a more specific check, e.g. for a TypeScript project with Docker
+      - name: Validate TypeScript project with Docker
+        run: repo-validate --typescript --docker
 ```
 
 ### Pre-commit Hook
