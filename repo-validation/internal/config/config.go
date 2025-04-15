@@ -55,58 +55,90 @@ type FileRequirement struct {
 // FileRequirementList represents a list of file requirements with helper methods
 type FileRequirementList []FileRequirement
 
+// FileGroup represents a group of file requirements
+type FileGroup struct {
+	Name         string
+	Flag         *bool
+	Requirements []FileRequirement
+}
+
+// GetFileGroups returns all file groups
+func GetFileGroups(cfg *Config) []FileGroup {
+	return []FileGroup{
+		{
+			Name:         "Core",
+			Flag:         nil, // Always included
+			Requirements: append(GetMustHaveFiles(), GetShouldHaveFiles()...),
+		},
+		{
+			Name:         "Augment",
+			Flag:         &cfg.CheckAugment,
+			Requirements: GetAugmentFiles(),
+		},
+		{
+			Name:         "Docker",
+			Flag:         &cfg.CheckDocker,
+			Requirements: GetDockerFiles(),
+		},
+		{
+			Name:         "TypeScript",
+			Flag:         &cfg.CheckTypeScript,
+			Requirements: GetTypeScriptFiles(),
+		},
+		{
+			Name:         "DevContainer",
+			Flag:         &cfg.CheckDevContainer,
+			Requirements: GetDevContainerFiles(),
+		},
+		{
+			Name:         "DevEnv",
+			Flag:         &cfg.CheckDevEnv,
+			Requirements: GetDevEnvFiles(),
+		},
+	}
+}
+
 // GetAllFileRequirements returns all file requirements based on the configuration
 func GetAllFileRequirements(cfg *Config) FileRequirementList {
 	var allRequirements FileRequirementList
 
-	// Always include general files
-	allRequirements = append(allRequirements, GetMustHaveFiles()...)
-	allRequirements = append(allRequirements, GetShouldHaveFiles()...)
+	// Get all file groups
+	fileGroups := GetFileGroups(cfg)
 
-	// Include optional file groups based on configuration
-	if cfg.CheckAugment {
-		allRequirements = append(allRequirements, GetAugmentFiles()...)
-	}
-
-	if cfg.CheckDocker {
-		allRequirements = append(allRequirements, GetDockerFiles()...)
-	}
-
-	if cfg.CheckTypeScript {
-		allRequirements = append(allRequirements, GetTypeScriptFiles()...)
-	}
-
-	if cfg.CheckDevContainer {
-		allRequirements = append(allRequirements, GetDevContainerFiles()...)
-	}
-
-	if cfg.CheckDevEnv {
-		allRequirements = append(allRequirements, GetDevEnvFiles()...)
+	// Add requirements from each group based on flags
+	for _, group := range fileGroups {
+		// If the flag is nil or true, include the requirements
+		if group.Flag == nil || *group.Flag {
+			allRequirements = append(allRequirements, group.Requirements...)
+		}
 	}
 
 	return allRequirements
 }
 
-// FilterByPriority returns file requirements with the specified priority
-func (list FileRequirementList) FilterByPriority(priority string) FileRequirementList {
+// Filter returns file requirements that match the given filter function
+func (list FileRequirementList) Filter(filterFn func(FileRequirement) bool) FileRequirementList {
 	var filtered FileRequirementList
 	for _, req := range list {
-		if req.Priority == priority {
+		if filterFn(req) {
 			filtered = append(filtered, req)
 		}
 	}
 	return filtered
 }
 
+// FilterByPriority returns file requirements with the specified priority
+func (list FileRequirementList) FilterByPriority(priority string) FileRequirementList {
+	return list.Filter(func(req FileRequirement) bool {
+		return req.Priority == priority
+	})
+}
+
 // FilterByCategory returns file requirements with the specified category
 func (list FileRequirementList) FilterByCategory(category string) FileRequirementList {
-	var filtered FileRequirementList
-	for _, req := range list {
-		if req.Category == category {
-			filtered = append(filtered, req)
-		}
-	}
-	return filtered
+	return list.Filter(func(req FileRequirement) bool {
+		return req.Category == category
+	})
 }
 
 // GetGeneralMustHaveFiles returns the list of general files that must be present in a repository
