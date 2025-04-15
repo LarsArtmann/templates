@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
+	"github.com/LarsArtmann/templates/repo-validation/internal/templates"
 )
 
 // ValidationResult represents the result of validating a file requirement
@@ -93,13 +94,18 @@ func (c *Checker) generateFile(req config.FileRequirement) error {
 		return nil
 	}
 
-	// Get the absolute path to the template
-	templatePath := filepath.Join(filepath.Dir(os.Args[0]), req.TemplatePath)
+	// Extract the template filename from the path
+	templateFilename := filepath.Base(req.TemplatePath)
 
-	// Read the template file
-	templateContent, err := os.ReadFile(templatePath)
+	// Read the template from the embedded filesystem
+	templateContent, err := templates.TemplateFS.ReadFile(templateFilename)
 	if err != nil {
-		return fmt.Errorf("error reading template %s: %w", req.TemplatePath, err)
+		// Try to read from the filesystem as a fallback
+		templatePath := filepath.Join(filepath.Dir(os.Args[0]), req.TemplatePath)
+		templateContent, err = os.ReadFile(templatePath)
+		if err != nil {
+			return fmt.Errorf("error reading template %s: %w", req.TemplatePath, err)
+		}
 	}
 
 	// Parse template
