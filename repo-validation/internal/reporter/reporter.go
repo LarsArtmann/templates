@@ -53,9 +53,9 @@ func (r *Reporter) processResults(results []checker.ValidationResult) (missingMu
 		}
 
 		if !result.Exists {
-			if result.Requirement.Priority == "Must-have" {
+			if result.Requirement.Priority == config.PriorityMustHave {
 				missingMustHave = append(missingMustHave, result.Requirement.Path)
-			} else if result.Requirement.Priority == "Should-have" {
+			} else if result.Requirement.Priority == config.PriorityShouldHave {
 				missingShouldHave = append(missingShouldHave, result.Requirement.Path)
 			}
 		}
