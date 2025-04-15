@@ -282,26 +282,32 @@ chmod +x .git/hooks/pre-commit
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant main.go
-    participant ValidateCommand
-    participant Checker
-    participant Reporter
+    autonumber
+    participant User as 👤 User
+    participant Main as 🚀 main.go
+    participant Command as 🔍 ValidateCommand
+    participant Checker as 🧐 Checker
+    participant Reporter as 📊 Reporter
 
-    User->>main.go: Run CLI with flags
-    main.go->>ValidateCommand: NewValidateCommand(config)
-    main.go->>ValidateCommand: Execute()
-    ValidateCommand->>Checker: CheckRepository()
-    Checker-->>ValidateCommand: ValidationResults
-    ValidateCommand->>Reporter: ReportResults(results)
-    alt Fix requested and missing files detected
-        ValidateCommand->>Checker: FixMissingFiles(results)
-        Checker-->>ValidateCommand: (fixes files)
-        ValidateCommand->>Checker: CheckRepository()
-        Checker-->>ValidateCommand: ValidationResults (updated)
-        ValidateCommand->>Reporter: ReportResults(results)
+    User->>+Main: Run CLI with flags
+    Main->>+Command: NewValidateCommand(config)
+    Main->>+Command: Execute()
+    activate Command
+    Command->>+Checker: CheckRepository()
+    Checker-->>-Command: ValidationResults
+    Command->>+Reporter: ReportResults(results)
+    Reporter-->>-Command: (report displayed)
+    
+    alt Fix requested && missing files detected
+        Command->>+Checker: FixMissingFiles(results)
+        Checker-->>-Command: (fixes applied)
+        Command->>+Checker: CheckRepository()
+        Checker-->>-Command: ValidationResults (updated)
+        Command->>+Reporter: ReportResults(updated results)
+        Reporter-->>-Command: (updated report displayed)
     end
-    ValidateCommand-->>main.go: error (if any)
-    main.go->>User: Output results / error
-
+    
+    Command-->>-Main: error (if any)
+    deactivate Command
+    Main-->>-User: Output results / error
 ```
