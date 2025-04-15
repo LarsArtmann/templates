@@ -41,17 +41,39 @@ func main() {
 		os.Exit(0)
 	}
 
-	// If --all is specified, enable all optional file groups
-	if *checkAll {
-		*checkAugment = true
-		*checkDocker = true
-		*checkTypeScript = true
-		*checkDevContainer = true
-		*checkDevEnv = true
+	// Prepare options for the run function
+	options := []config.ConfigOption{
+		config.WithDryRun(*dryRun),
+		config.WithFix(*fix),
+		config.WithJSONOutput(*jsonOutput),
+		config.WithRepoPath(*repoPath),
+		config.WithInteractive(*interactive),
 	}
 
-	// Run the application
-	if err := run(*dryRun, *fix, *jsonOutput, *repoPath, *interactive, *checkAugment, *checkDocker, *checkTypeScript, *checkDevContainer, *checkDevEnv); err != nil {
+	// If --all is specified, add the all file group option
+	if *checkAll {
+		options = append(options, config.WithFileGroup("all", true))
+	} else {
+		// Otherwise, add individual file group options
+		if *checkAugment {
+			options = append(options, config.WithFileGroup("augment", true))
+		}
+		if *checkDocker {
+			options = append(options, config.WithFileGroup("docker", true))
+		}
+		if *checkTypeScript {
+			options = append(options, config.WithFileGroup("typescript", true))
+		}
+		if *checkDevContainer {
+			options = append(options, config.WithFileGroup("devcontainer", true))
+		}
+		if *checkDevEnv {
+			options = append(options, config.WithFileGroup("devenv", true))
+		}
+	}
+
+	// Run the application with the options
+	if err := run(options...); err != nil {
 		if *jsonOutput {
 			// Output error in JSON format
 			fmt.Printf("{\"error\": \"%s\"}\n", err.Error())
@@ -191,25 +213,21 @@ func promptForMissingParameters(cfg *config.Config) error {
 }
 
 // run executes the main application logic
-func run(dryRun, fix, jsonOutput bool, repoPath string, interactive bool, checkAugment, checkDocker, checkTypeScript, checkDevContainer, checkDevEnv bool) error {
-	// Create the configuration
+func run(opts ...config.ConfigOption) error {
+	// Create default configuration
 	cfg := &config.Config{
-		DryRun:          dryRun,
-		Fix:             fix,
-		JSONOutput:      jsonOutput,
-		RepoPath:        repoPath,
-		Interactive:     interactive,
-		CheckAugment:    checkAugment,
-		CheckDocker:     checkDocker,
-		CheckTypeScript: checkTypeScript,
-		CheckDevContainer: checkDevContainer,
-		CheckDevEnv:     checkDevEnv,
+		RepoPath: ".",
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(cfg)
 	}
 
 	// Validate the configuration
 	if err := cfg.Validate(); err != nil {
 		// If interactive mode is enabled, prompt for missing parameters
-		if interactive {
+		if cfg.Interactive {
 			if err := promptForMissingParameters(cfg); err != nil {
 				return err
 			}

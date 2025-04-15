@@ -2,6 +2,68 @@ package config
 
 import "fmt"
 
+// ConfigOption is a function that configures a Config
+type ConfigOption func(*Config)
+
+// WithDryRun sets the DryRun option
+func WithDryRun(dryRun bool) ConfigOption {
+	return func(c *Config) {
+		c.DryRun = dryRun
+	}
+}
+
+// WithFix sets the Fix option
+func WithFix(fix bool) ConfigOption {
+	return func(c *Config) {
+		c.Fix = fix
+	}
+}
+
+// WithJSONOutput sets the JSONOutput option
+func WithJSONOutput(jsonOutput bool) ConfigOption {
+	return func(c *Config) {
+		c.JSONOutput = jsonOutput
+	}
+}
+
+// WithRepoPath sets the RepoPath option
+func WithRepoPath(repoPath string) ConfigOption {
+	return func(c *Config) {
+		c.RepoPath = repoPath
+	}
+}
+
+// WithInteractive sets the Interactive option
+func WithInteractive(interactive bool) ConfigOption {
+	return func(c *Config) {
+		c.Interactive = interactive
+	}
+}
+
+// WithFileGroup enables a specific file group
+func WithFileGroup(group string, enabled bool) ConfigOption {
+	return func(c *Config) {
+		switch group {
+		case "augment":
+			c.CheckAugment = enabled
+		case "docker":
+			c.CheckDocker = enabled
+		case "typescript":
+			c.CheckTypeScript = enabled
+		case "devcontainer":
+			c.CheckDevContainer = enabled
+		case "devenv":
+			c.CheckDevEnv = enabled
+		case "all":
+			c.CheckAugment = enabled
+			c.CheckDocker = enabled
+			c.CheckTypeScript = enabled
+			c.CheckDevContainer = enabled
+			c.CheckDevEnv = enabled
+		}
+	}
+}
+
 // Priority levels
 const (
 	PriorityMustHave   = "Must-have"
