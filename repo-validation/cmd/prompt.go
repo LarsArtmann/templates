@@ -11,6 +11,17 @@ import (
 
 // PromptForMissingParameters prompts the user for missing parameters
 func PromptForMissingParameters(cfg *config.Config) error {
+	// Don't prompt in JSON mode
+	if cfg.JSONOutput {
+		return fmt.Errorf("cannot prompt for parameters in JSON output mode")
+	}
+
+	// Verify we're running in an interactive terminal
+	fileInfo, _ := os.Stdin.Stat()
+	if (fileInfo.Mode() & os.ModeCharDevice) == 0 {
+		return fmt.Errorf("cannot prompt for parameters in non-interactive mode")
+	}
+
 	reader := bufio.NewReader(os.Stdin)
 
 	// If DryRun and Fix are both true, prompt to resolve the conflict
