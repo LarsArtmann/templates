@@ -16,7 +16,7 @@ func Run(opts ...config.ConfigOption) error {
 	cfg := &config.Config{
 		RepoPath: ".",
 	}
-	
+
 	// Apply options
 	for _, opt := range opts {
 		opt(cfg)
@@ -88,15 +88,29 @@ func Run(opts ...config.ConfigOption) error {
 		}
 	}
 
-	// Return an error if there are missing must-have files
+	// Check for errors and missing must-have files
+	var hasErrors bool
+	var firstError error
 	for _, result := range results {
 		if result.Error != nil {
-			return fmt.Errorf("error validating repository: %s", rep.GetSummary(results))
+			hasErrors = true
+			if firstError == nil {
+				firstError = result.Error
+			}
+			continue
 		}
 
 		if !result.Exists && result.Requirement.Priority == config.PriorityMustHave {
-			return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
+			hasErrors = true
+			if firstError == nil {
+				firstError = fmt.Errorf("missing must-have file: %s", result.Requirement.Path)
+			}
 		}
+	}
+
+	// Return an error if there are any issues
+	if hasErrors {
+		return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
 	}
 
 	return nil
