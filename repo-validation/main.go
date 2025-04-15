@@ -264,7 +264,9 @@ func run(dryRun, fix, jsonOutput bool, repoPath string, interactive bool, checkA
 		}
 
 		// Report the results again
-		fmt.Println("\nAfter fixing:")
+		if !cfg.JSONOutput {
+			fmt.Println("\nAfter fixing:")
+		}
 		if err := rep.ReportResults(results); err != nil {
 			return fmt.Errorf("error reporting results after fixing: %w", err)
 		}
@@ -276,7 +278,7 @@ func run(dryRun, fix, jsonOutput bool, repoPath string, interactive bool, checkA
 			return fmt.Errorf("error validating repository: %s", rep.GetSummary(results))
 		}
 
-		if !result.Exists && result.Requirement.Priority == "Must-have" {
+		if !result.Exists && result.Requirement.Priority == config.PriorityMustHave {
 			return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
 		}
 	}
