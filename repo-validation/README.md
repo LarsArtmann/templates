@@ -1,31 +1,60 @@
 # Repository Validation Script
 
-A script for validating the presence of common project files in a repository.
-It can be used to ensure that all required files are present and to generate missing files if desired.
+A tool for validating the presence of common project files in a repository. It ensures that repositories follow best practices by checking for essential files and can automatically generate missing files.
+
+## Overview
+
+This validation script helps maintain consistency across repositories by:
+
+- Checking for the presence of essential files (README.md, LICENSE.md, etc.)
+- Validating project-specific files based on the technology stack
+- Generating missing files from templates when possible
+- Providing clear, actionable feedback about missing files
+
+The tool is configurable to work with different types of repositories and can be integrated into CI/CD pipelines or used as a pre-commit hook.
+
+## Installation
+
+### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/LarsArtmann/templates.git
+cd templates/repo-validation
+
+# Build the tool
+go build -o repo-validate
+
+# Optional: Install to your PATH
+sudo mv repo-validate /usr/local/bin/
+```
+
+### Using Go Install
+
+```bash
+go install github.com/LarsArtmann/templates/repo-validation@latest
+```
 
 ## Usage
 
 ```bash
-# Build the tool
-go build -o repo-validate
-
 # Basic validation (current directory)
-./repo-validate
+repo-validate
 
 # Validate a specific repository
-./repo-validate --path /path/to/repository
+repo-validate --path /path/to/repository
 
 # Generate missing files
-./repo-validate --fix
+repo-validate --fix
 
 # Only report issues without making changes
-./repo-validate --dry-run
+repo-validate --dry-run
 
 # Output results in JSON format
-./repo-validate --json
+repo-validate --json
 
 # Show help
-./repo-validate --help
+repo-validate --help
 ```
 
 ### Options
@@ -109,6 +138,114 @@ INFO Run with --fix to generate missing files
     "CODEOWNERS"
   ]
 }
+```
+
+## File Requirements
+
+The validation script checks for the following file groups:
+
+### Core Files (Always Checked)
+
+| File | Priority | Description |
+|------|----------|-------------|
+| `README.md` | Must-have | Primary documentation file that explains what the project does |
+| `.gitignore` | Must-have | Specifies intentionally untracked files to ignore when using Git |
+| `LICENSE.md` | Must-have | Defines the terms under which the software can be used and distributed |
+| `SECURITY.md` | Must-have | Provides security policy and vulnerability reporting instructions |
+| `AUTHORS` | Should-have | Lists all individuals who have contributed to the project |
+| `MAINTAINERS.md` | Should-have | Identifies current maintainers and their responsibilities |
+| `.editorconfig` | Should-have | Helps maintain consistent coding styles across various editors and IDEs |
+| `CONTRIBUTING.md` | Should-have | Guidelines for how to contribute to the project |
+| `CODE-OF-CONDUCT.md` | Should-have | Establishes expectations for behavior within the project community |
+| `CODEOWNERS` | Should-have | Defines individuals or teams responsible for code in a repository |
+
+### Augment AI Files (--augment)
+
+| File | Priority | Description |
+|------|----------|-------------|
+| `.augment-guidelines` | Should-have | Provides guidelines for Augment AI to follow when working with the codebase |
+| `.augmentignore` | Should-have | Controls what files Augment AI indexes in the workspace |
+
+### Docker Files (--docker)
+
+| File | Priority | Description |
+|------|----------|-------------|
+| `Dockerfile` | Must-have | Instructions for building a Docker image for the application |
+| `.dockerignore` | Should-have | Specifies files that should be excluded when building Docker images |
+| `docker-compose.yaml` | Should-have | Defines and runs multi-container Docker applications |
+
+### TypeScript/JavaScript Files (--typescript)
+
+| File | Priority | Description |
+|------|----------|-------------|
+| `package.json` | Must-have | Defines project metadata and dependencies for Node.js projects |
+| `tsconfig.json` | Must-have | Configuration file for TypeScript compiler options |
+
+### DevContainer Files (--devcontainer)
+
+| File | Priority | Description |
+|------|----------|-------------|
+| `.devcontainer.json` | Nice-to-have | Configuration for development in a containerized environment |
+
+### DevEnv Files (--devenv)
+
+| File | Priority | Description |
+|------|----------|-------------|
+| `devenv.nix` | Nice-to-have | Defines development environment using Nix for reproducible builds |
+
+## Integration
+
+### GitHub Actions
+
+You can integrate the repository validation script into your GitHub Actions workflow:
+
+```yaml
+name: Validate Repository
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install repo-validate
+        run: go install github.com/LarsArtmann/templates/repo-validation@latest
+
+      - name: Validate repository
+        run: repo-validate --all
+```
+
+### Pre-commit Hook
+
+You can use the validation script as a pre-commit hook to ensure that all required files are present before committing:
+
+```bash
+#!/bin/sh
+# .git/hooks/pre-commit
+
+repo-validate
+
+if [ $? -ne 0 ]; then
+  echo "Repository validation failed. Please fix the issues before committing."
+  exit 1
+fi
+```
+
+Make the hook executable:
+
+```bash
+chmod +x .git/hooks/pre-commit
 ```
 
 ## Architecture
