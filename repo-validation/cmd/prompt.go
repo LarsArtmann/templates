@@ -115,27 +115,49 @@ func PromptForMissingParameters(cfg *config.Config) error {
 				continue
 			}
 
-			switch c {
-			case "1":
-				cfg.CheckAugment = true
-			case "2":
-				cfg.CheckDocker = true
-			case "3":
-				cfg.CheckTypeScript = true
-			case "4":
-				cfg.CheckDevContainer = true
-			case "5":
-				cfg.CheckDevEnv = true
-			case "6":
-				// All file groups
+			// Check for option 6 (All) or 7 (None) first
+			if c == "6" {
+				// All file groups - reset any previously set flags
+				cfg.CheckAugment = false
+				cfg.CheckDocker = false
+				cfg.CheckTypeScript = false
+				cfg.CheckDevContainer = false
+				cfg.CheckDevEnv = false
+
+				// Set all flags to true
 				cfg.CheckAugment = true
 				cfg.CheckDocker = true
 				cfg.CheckTypeScript = true
 				cfg.CheckDevContainer = true
 				cfg.CheckDevEnv = true
-			case "7":
+
+				// Skip processing other options since we've selected ALL
+				break
+			} else if c == "7" {
 				// None (only check core files)
-				// This is already the default, so we don't need to do anything
+				// Reset all flags to false
+				cfg.CheckAugment = false
+				cfg.CheckDocker = false
+				cfg.CheckTypeScript = false
+				cfg.CheckDevContainer = false
+				cfg.CheckDevEnv = false
+
+				// Skip processing other options
+				break
+			} else {
+				// Individual options
+				switch c {
+				case "1":
+					cfg.CheckAugment = true
+				case "2":
+					cfg.CheckDocker = true
+				case "3":
+					cfg.CheckTypeScript = true
+				case "4":
+					cfg.CheckDevContainer = true
+				case "5":
+					cfg.CheckDevEnv = true
+				}
 			}
 		}
 
