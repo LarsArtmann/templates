@@ -43,7 +43,7 @@ func (c *ValidateCommand) Execute() error {
 	}
 
 	// Fix missing files if requested
-	if c.Config.Fix {
+	if c.Config.Fix && !c.Config.DryRun {
 		if err := chk.FixMissingFiles(results); err != nil {
 			return fmt.Errorf("error fixing missing files: %w", err)
 		}
@@ -55,9 +55,16 @@ func (c *ValidateCommand) Execute() error {
 		}
 
 		// Report the results again
-		fmt.Println("\nAfter fixing:")
+		if !c.Config.JSONOutput {
+			fmt.Println("\nAfter fixing:")
+		}
 		if err := rep.ReportResults(results); err != nil {
 			return fmt.Errorf("error reporting results after fixing: %w", err)
+		}
+	} else if c.Config.Fix && c.Config.DryRun {
+		// Flag conflict - both dry-run and fix are set
+		if !c.Config.JSONOutput {
+			fmt.Println("Warning: Both --dry-run and --fix flags are set. No files will be modified due to dry-run mode.")
 		}
 	}
 

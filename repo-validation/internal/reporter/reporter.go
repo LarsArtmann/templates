@@ -133,17 +133,16 @@ func (r *Reporter) reportResultsJSON(results []checker.ValidationResult) error {
 
 // GetSummary returns a summary of the validation results
 func (r *Reporter) GetSummary(results []checker.ValidationResult) string {
-	// Note: We're using a simplified version of processResults here because
-	// we only need the path for errors, not the full error message
-	missingMustHave, missingShouldHave, _ := r.processResults(results)
+	// Reuse the processResults function for consistency
+	missingMustHave, missingShouldHave, errors := r.processResults(results)
 
-	// Extract just the paths for errors
-	var errors []string
-	for _, result := range results {
-		if result.Error != nil {
-			errors = append(errors, result.Requirement.Path)
-		}
+	// Extract just the paths from error messages for simpler output
+	simplifiedErrors := make([]string, len(errors))
+	for i, err := range errors {
+		parts := strings.SplitN(err, ":", 2)
+		simplifiedErrors[i] = parts[0]
 	}
+	errors = simplifiedErrors
 
 	var summary strings.Builder
 
