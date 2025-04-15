@@ -1,6 +1,8 @@
 package plugin
 
-import "github.com/LarsArtmann/templates/repo-validation/domain"
+import (
+	"github.com/LarsArtmann/templates/repo-validation/domain"
+)
 
 // DockerPlugin implements the Docker file group plugin
 type DockerPlugin struct{}
@@ -21,22 +23,22 @@ func (p *DockerPlugin) Files() []domain.File {
 		{
 			Path:     "Dockerfile",
 			Required: true,
-			Category: "Docker",
-			Priority: "Must-have",
+			Category: domain.CategoryDocker,
+			Priority: domain.PriorityMustHave,
 			Template: "Dockerfile.tmpl",
 		},
 		{
 			Path:     "docker-compose.yaml",
 			Required: false,
-			Category: "Docker",
-			Priority: "Should-have",
+			Category: domain.CategoryDocker,
+			Priority: domain.PriorityShouldHave,
 			Template: "docker-compose.yaml.tmpl",
 		},
 		{
 			Path:     ".dockerignore",
 			Required: false,
-			Category: "Docker",
-			Priority: "Should-have",
+			Category: domain.CategoryDocker,
+			Priority: domain.PriorityShouldHave,
 			Template: ".dockerignore.tmpl",
 		},
 	}

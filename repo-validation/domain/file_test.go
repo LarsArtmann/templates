@@ -82,15 +82,15 @@ func TestFileService_Validate(t *testing.T) {
 			repo := &MockFileRepository{
 				existsFunc: tt.existsFunc,
 			}
-			
+
 			service := NewFileService(repo)
-			
+
 			err := service.Validate(tt.file)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FileService.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			
+
 			if tt.file.Exists != tt.wantExists {
 				t.Errorf("FileService.Validate() file.Exists = %v, wantExists %v", tt.file.Exists, tt.wantExists)
 			}
@@ -128,6 +128,18 @@ func TestFileService_Generate(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "required file with no template",
+			file: &File{
+				Path:     "test.txt",
+				Required: true,
+				Template: "",
+			},
+			generateFunc: func(path, templatePath string, data interface{}) error {
+				return nil
+			},
+			wantErr: true,
+		},
+		{
 			name: "error generating file",
 			file: &File{
 				Path:     "test.txt",
@@ -145,11 +157,11 @@ func TestFileService_Generate(t *testing.T) {
 			repo := &MockFileRepository{
 				generateFunc: tt.generateFunc,
 			}
-			
+
 			service := NewFileService(repo)
-			
+
 			err := service.Generate(tt.file, nil)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FileService.Generate() error = %v, wantErr %v", err, tt.wantErr)
 			}

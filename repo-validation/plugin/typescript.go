@@ -1,6 +1,8 @@
 package plugin
 
-import "github.com/LarsArtmann/templates/repo-validation/domain"
+import (
+	"github.com/LarsArtmann/templates/repo-validation/domain"
+)
 
 // TypeScriptPlugin implements the TypeScript file group plugin
 type TypeScriptPlugin struct{}
@@ -21,36 +23,36 @@ func (p *TypeScriptPlugin) Files() []domain.File {
 		{
 			Path:     "package.json",
 			Required: true,
-			Category: "TypeScript",
-			Priority: "Must-have",
+			Category: domain.CategoryTypeScript,
+			Priority: domain.PriorityMustHave,
 			Template: "package.json.tmpl",
 		},
 		{
 			Path:     "tsconfig.json",
 			Required: true,
-			Category: "TypeScript",
-			Priority: "Must-have",
+			Category: domain.CategoryTypeScript,
+			Priority: domain.PriorityMustHave,
 			Template: "tsconfig.json.tmpl",
 		},
 		{
 			Path:     ".eslintrc.json",
 			Required: false,
-			Category: "TypeScript",
-			Priority: "Should-have",
+			Category: domain.CategoryTypeScript,
+			Priority: domain.PriorityShouldHave,
 			Template: ".eslintrc.json.tmpl",
 		},
 		{
 			Path:     ".prettierrc",
 			Required: false,
-			Category: "TypeScript",
-			Priority: "Should-have",
+			Category: domain.CategoryTypeScript,
+			Priority: domain.PriorityShouldHave,
 			Template: ".prettierrc.tmpl",
 		},
 		{
 			Path:     "jest.config.js",
 			Required: false,
-			Category: "TypeScript",
-			Priority: "Should-have",
+			Category: domain.CategoryTypeScript,
+			Priority: domain.PriorityShouldHave,
 			Template: "jest.config.js.tmpl",
 		},
 	}

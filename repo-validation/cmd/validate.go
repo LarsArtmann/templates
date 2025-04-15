@@ -53,8 +53,8 @@ func runValidate(opts ...config.ConfigOption) error {
 	}
 	cfg.RepoPath = absPath
 
-	// Create the file repository
-	fileRepo := infrastructure.NewFileRepository(cfg.RepoPath)
+	// Create the file repository with force option if fix is enabled
+	fileRepo := infrastructure.NewFileRepository(cfg.RepoPath, infrastructure.WithForce(cfg.Fix))
 
 	// Create the plugin registry
 	registry := plugin.NewPluginRegistry()

@@ -14,13 +14,32 @@ import (
 // FileRepository implements the domain.FileRepository interface
 type FileRepository struct {
 	basePath string
+	force    bool
+}
+
+// FileRepositoryOption is a function that configures a FileRepository
+type FileRepositoryOption func(*FileRepository)
+
+// WithForce configures the FileRepository to force overwrite existing files
+func WithForce(force bool) FileRepositoryOption {
+	return func(r *FileRepository) {
+		r.force = force
+	}
 }
 
 // NewFileRepository creates a new FileRepository
-func NewFileRepository(basePath string) *FileRepository {
-	return &FileRepository{
+func NewFileRepository(basePath string, opts ...FileRepositoryOption) *FileRepository {
+	repo := &FileRepository{
 		basePath: basePath,
+		force:    false, // Default to not overwriting existing files
 	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(repo)
+	}
+
+	return repo
 }
 
 // CheckExists checks if a file exists
@@ -93,7 +112,10 @@ func (r *FileRepository) Generate(path, templatePath string, data interface{}) e
 	// Check if the file already exists
 	if _, err := os.Stat(fullPath); err == nil {
 		// File exists, check if we should overwrite it
-		return fmt.Errorf("file %s already exists, not overwriting", fullPath)
+		if !r.force {
+			return fmt.Errorf("file %s already exists, not overwriting (use force option to override)", fullPath)
+		}
+		// If force is true, we'll overwrite the file
 	} else if !os.IsNotExist(err) {
 		// Some other error occurred
 		return fmt.Errorf("error checking if file %s exists: %w", fullPath, err)

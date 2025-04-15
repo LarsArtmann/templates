@@ -1,6 +1,8 @@
 package plugin
 
-import "github.com/LarsArtmann/templates/repo-validation/domain"
+import (
+	"github.com/LarsArtmann/templates/repo-validation/domain"
+)
 
 // DevEnvPlugin implements the DevEnv file group plugin
 type DevEnvPlugin struct{}
@@ -21,22 +23,22 @@ func (p *DevEnvPlugin) Files() []domain.File {
 		{
 			Path:     "devenv.nix",
 			Required: true,
-			Category: "DevEnv",
-			Priority: "Must-have",
+			Category: domain.CategoryDevEnv,
+			Priority: domain.PriorityMustHave,
 			Template: "devenv.nix.tmpl",
 		},
 		{
 			Path:     "devenv.yaml",
 			Required: false,
-			Category: "DevEnv",
-			Priority: "Should-have",
+			Category: domain.CategoryDevEnv,
+			Priority: domain.PriorityShouldHave,
 			Template: "devenv.yaml.tmpl",
 		},
 		{
 			Path:     "devenv.lock",
 			Required: false,
-			Category: "DevEnv",
-			Priority: "Should-have",
+			Category: domain.CategoryDevEnv,
+			Priority: domain.PriorityShouldHave,
 			Template: "devenv.lock.tmpl",
 		},
 	}

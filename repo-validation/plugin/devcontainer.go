@@ -1,6 +1,8 @@
 package plugin
 
-import "github.com/LarsArtmann/templates/repo-validation/domain"
+import (
+	"github.com/LarsArtmann/templates/repo-validation/domain"
+)
 
 // DevContainerPlugin implements the DevContainer file group plugin
 type DevContainerPlugin struct{}
@@ -21,22 +23,22 @@ func (p *DevContainerPlugin) Files() []domain.File {
 		{
 			Path:     ".devcontainer/devcontainer.json",
 			Required: true,
-			Category: "DevContainer",
-			Priority: "Must-have",
+			Category: domain.CategoryDevContainer,
+			Priority: domain.PriorityMustHave,
 			Template: "devcontainer.json.tmpl",
 		},
 		{
 			Path:     ".devcontainer/Dockerfile",
 			Required: false,
-			Category: "DevContainer",
-			Priority: "Should-have",
+			Category: domain.CategoryDevContainer,
+			Priority: domain.PriorityShouldHave,
 			Template: "devcontainer.Dockerfile.tmpl",
 		},
 		{
 			Path:     ".devcontainer/docker-compose.yml",
 			Required: false,
-			Category: "DevContainer",
-			Priority: "Should-have",
+			Category: domain.CategoryDevContainer,
+			Priority: domain.PriorityShouldHave,
 			Template: "devcontainer.docker-compose.yml.tmpl",
 		},
 	}

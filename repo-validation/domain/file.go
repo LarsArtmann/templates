@@ -2,13 +2,47 @@ package domain
 
 import "fmt"
 
+// Priority represents the importance of a file
+type Priority string
+
+const (
+	// PriorityMustHave indicates that the file must be present
+	PriorityMustHave Priority = "Must-have"
+	// PriorityShouldHave indicates that the file should be present
+	PriorityShouldHave Priority = "Should-have"
+	// PriorityNiceToHave indicates that the file is nice to have
+	PriorityNiceToHave Priority = "Nice-to-have"
+)
+
+// Category represents the type of file
+type Category string
+
+const (
+	// CategoryDocumentation indicates that the file is documentation
+	CategoryDocumentation Category = "Documentation"
+	// CategoryGit indicates that the file is related to Git
+	CategoryGit Category = "Git"
+	// CategoryDevelopment indicates that the file is related to development
+	CategoryDevelopment Category = "Development"
+	// CategoryDocker indicates that the file is related to Docker
+	CategoryDocker Category = "Docker"
+	// CategoryTypeScript indicates that the file is related to TypeScript
+	CategoryTypeScript Category = "TypeScript"
+	// CategoryDevContainer indicates that the file is related to DevContainer
+	CategoryDevContainer Category = "DevContainer"
+	// CategoryDevEnv indicates that the file is related to DevEnv
+	CategoryDevEnv Category = "DevEnv"
+	// CategoryAugment indicates that the file is related to Augment
+	CategoryAugment Category = "Augment"
+)
+
 // File represents a file in a repository
 type File struct {
 	Path     string
 	Exists   bool
 	Required bool
-	Category string
-	Priority string
+	Category Category
+	Priority Priority
 	Template string
 }
 

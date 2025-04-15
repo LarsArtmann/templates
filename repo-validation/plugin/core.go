@@ -1,6 +1,8 @@
 package plugin
 
-import "github.com/LarsArtmann/templates/repo-validation/domain"
+import (
+	"github.com/LarsArtmann/templates/repo-validation/domain"
+)
 
 // CorePlugin implements the core file group plugin
 type CorePlugin struct{}
@@ -21,71 +23,71 @@ func (p *CorePlugin) Files() []domain.File {
 		{
 			Path:     "README.md",
 			Required: true,
-			Category: "Documentation",
-			Priority: "Must-have",
+			Category: domain.CategoryDocumentation,
+			Priority: domain.PriorityMustHave,
 			Template: "README.md.tmpl",
 		},
 		{
 			Path:     "LICENSE.md",
 			Required: true,
-			Category: "Documentation",
-			Priority: "Must-have",
+			Category: domain.CategoryDocumentation,
+			Priority: domain.PriorityMustHave,
 			Template: "LICENSE.md.tmpl",
 		},
 		{
 			Path:     ".gitignore",
 			Required: true,
-			Category: "Git",
-			Priority: "Must-have",
+			Category: domain.CategoryGit,
+			Priority: domain.PriorityMustHave,
 			Template: ".gitignore.tmpl",
 		},
 		{
 			Path:     "SECURITY.md",
 			Required: true,
-			Category: "Documentation",
-			Priority: "Must-have",
+			Category: domain.CategoryDocumentation,
+			Priority: domain.PriorityMustHave,
 			Template: "SECURITY.md.tmpl",
 		},
 		{
 			Path:     "AUTHORS",
 			Required: false,
-			Category: "Documentation",
-			Priority: "Should-have",
+			Category: domain.CategoryDocumentation,
+			Priority: domain.PriorityShouldHave,
 			Template: "AUTHORS.tmpl",
 		},
 		{
 			Path:     "MAINTAINERS.md",
 			Required: false,
-			Category: "Documentation",
-			Priority: "Should-have",
+			Category: domain.CategoryDocumentation,
+			Priority: domain.PriorityShouldHave,
 			Template: "MAINTAINERS.md.tmpl",
 		},
 		{
 			Path:     ".editorconfig",
 			Required: false,
-			Category: "Development",
-			Priority: "Should-have",
+			Category: domain.CategoryDevelopment,
+			Priority: domain.PriorityShouldHave,
 			Template: ".editorconfig.tmpl",
 		},
 		{
 			Path:     "CONTRIBUTING.md",
 			Required: false,
-			Category: "Documentation",
-			Priority: "Should-have",
+			Category: domain.CategoryDocumentation,
+			Priority: domain.PriorityShouldHave,
 			Template: "CONTRIBUTING.md.tmpl",
 		},
 		{
 			Path:     "CODE-OF-CONDUCT.md",
 			Required: false,
-			Category: "Documentation",
-			Priority: "Should-have",
+			Category: domain.CategoryDocumentation,
+			Priority: domain.PriorityShouldHave,
 			Template: "CODE-OF-CONDUCT.md.tmpl",
 		},
 		{
 			Path:     "CODEOWNERS",
 			Required: false,
-			Category: "Git",
-			Priority: "Should-have",
+			Category: domain.CategoryGit,
+			Priority: domain.PriorityShouldHave,
 			Template: "CODEOWNERS.tmpl",
 		},
 	}

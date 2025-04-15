@@ -1,6 +1,8 @@
 package plugin
 
-import "github.com/LarsArtmann/templates/repo-validation/domain"
+import (
+	"github.com/LarsArtmann/templates/repo-validation/domain"
+)
 
 // AugmentPlugin implements the Augment file group plugin
 type AugmentPlugin struct{}
@@ -21,15 +23,15 @@ func (p *AugmentPlugin) Files() []domain.File {
 		{
 			Path:     ".augment-guidelines",
 			Required: true,
-			Category: "Augment",
-			Priority: "Must-have",
+			Category: domain.CategoryAugment,
+			Priority: domain.PriorityMustHave,
 			Template: ".augment-guidelines.tmpl",
 		},
 		{
 			Path:     ".augmentignore",
 			Required: true,
-			Category: "Augment",
-			Priority: "Must-have",
+			Category: domain.CategoryAugment,
+			Priority: domain.PriorityMustHave,
 			Template: ".augmentignore.tmpl",
 		},
 	}
