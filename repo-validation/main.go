@@ -1,16 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/LarsArtmann/templates/repo-validation/internal/checker"
+	"github.com/LarsArtmann/templates/repo-validation/cmd"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
-	"github.com/LarsArtmann/templates/repo-validation/internal/reporter"
 )
 
 // Version is the current version of the repository validation script
@@ -73,7 +69,7 @@ func main() {
 	}
 
 	// Run the application with the options
-	if err := run(options...); err != nil {
+	if err := cmd.Run(options...); err != nil {
 		if *jsonOutput {
 			// Output error in JSON format
 			fmt.Printf("{\"error\": \"%s\"}\n", err.Error())
@@ -85,221 +81,4 @@ func main() {
 	}
 }
 
-// promptForMissingParameters prompts the user for missing parameters
-func promptForMissingParameters(cfg *config.Config) error {
-	reader := bufio.NewReader(os.Stdin)
 
-	// If DryRun and Fix are both true, prompt to resolve the conflict
-	if cfg.DryRun && cfg.Fix {
-		fmt.Println("--dry-run and --fix cannot be used together. Which one do you want to use?")
-		fmt.Println("1. Dry Run (only report issues)")
-		fmt.Println("2. Fix (generate missing files)")
-		fmt.Print("Enter your choice (1 or 2): ")
-
-		choice, err := reader.ReadString('\n')
-		if err != nil {
-			return fmt.Errorf("error reading input: %w", err)
-		}
-
-		choice = strings.TrimSpace(choice)
-		if choice == "" {
-			return fmt.Errorf("no choice provided, please enter 1 or 2")
-		}
-
-		switch choice {
-		case "1":
-			cfg.DryRun = true
-			cfg.Fix = false
-		case "2":
-			cfg.DryRun = false
-			cfg.Fix = true
-		default:
-			return fmt.Errorf("invalid choice: %s (must be 1 or 2)", choice)
-		}
-	} else if !cfg.Fix && !cfg.DryRun {
-		// If neither Fix nor DryRun is set, prompt for Fix
-		fmt.Print("Do you want to fix missing files? (y/n): ")
-
-		choice, err := reader.ReadString('\n')
-		if err != nil {
-			return fmt.Errorf("error reading input: %w", err)
-		}
-
-		choice = strings.TrimSpace(strings.ToLower(choice))
-		if choice == "" {
-			// Default to not fixing if no input is provided
-			fmt.Println("No input provided, defaulting to no fix")
-			cfg.Fix = false
-		} else if choice == "y" || choice == "yes" {
-			cfg.Fix = true
-		} else if choice == "n" || choice == "no" {
-			cfg.Fix = false
-		} else {
-			return fmt.Errorf("invalid choice: %s (must be y/yes or n/no)", choice)
-		}
-	}
-
-	// If no file groups are selected, prompt for which ones to check
-	if !cfg.CheckAugment && !cfg.CheckDocker && !cfg.CheckTypeScript && !cfg.CheckDevContainer && !cfg.CheckDevEnv {
-		fmt.Println("Which file groups do you want to check?")
-		fmt.Println("1. Augment AI files (.augment-guidelines, .augmentignore)")
-		fmt.Println("2. Docker files (Dockerfile, docker-compose.yaml, .dockerignore)")
-		fmt.Println("3. TypeScript/JavaScript files (package.json, tsconfig.json)")
-		fmt.Println("4. DevContainer files (.devcontainer.json)")
-		fmt.Println("5. DevEnv files (devenv.nix)")
-		fmt.Println("6. All file groups")
-		fmt.Println("7. None (only check core files)")
-		fmt.Print("Enter your choices (comma-separated, e.g., 1,3,5): ")
-
-		choice, err := reader.ReadString('\n')
-		if err != nil {
-			return fmt.Errorf("error reading input: %w", err)
-		}
-
-		choice = strings.TrimSpace(choice)
-		if choice == "" {
-			// Default to core files only if no input is provided
-			fmt.Println("No input provided, defaulting to core files only")
-			return nil
-		}
-
-		choices := strings.Split(choice, ",")
-		validChoices := map[string]bool{"1": true, "2": true, "3": true, "4": true, "5": true, "6": true, "7": true}
-		hasInvalidChoice := false
-		invalidChoices := []string{}
-
-		for _, c := range choices {
-			c = strings.TrimSpace(c)
-			if c == "" {
-				continue
-			}
-
-			if !validChoices[c] {
-				hasInvalidChoice = true
-				invalidChoices = append(invalidChoices, c)
-				continue
-			}
-
-			switch c {
-			case "1":
-				cfg.CheckAugment = true
-			case "2":
-				cfg.CheckDocker = true
-			case "3":
-				cfg.CheckTypeScript = true
-			case "4":
-				cfg.CheckDevContainer = true
-			case "5":
-				cfg.CheckDevEnv = true
-			case "6":
-				// All file groups
-				cfg.CheckAugment = true
-				cfg.CheckDocker = true
-				cfg.CheckTypeScript = true
-				cfg.CheckDevContainer = true
-				cfg.CheckDevEnv = true
-			case "7":
-				// None (only check core files)
-				// This is already the default, so we don't need to do anything
-			}
-		}
-
-		if hasInvalidChoice {
-			return fmt.Errorf("invalid choices: %s (must be numbers between 1-7)", strings.Join(invalidChoices, ", "))
-		}
-	}
-
-	return nil
-}
-
-// run executes the main application logic
-func run(opts ...config.ConfigOption) error {
-	// Create default configuration
-	cfg := &config.Config{
-		RepoPath: ".",
-	}
-
-	// Apply options
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
-	// Validate the configuration
-	if err := cfg.Validate(); err != nil {
-		// If interactive mode is enabled, prompt for missing parameters
-		if cfg.Interactive {
-			if err := promptForMissingParameters(cfg); err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-
-	// Resolve the repository path to an absolute path
-	absPath, err := filepath.Abs(cfg.RepoPath)
-	if err != nil {
-		return fmt.Errorf("failed to resolve repository path: %w", err)
-	}
-
-	// Check if the path exists and is a directory
-	stat, err := os.Stat(absPath)
-	if err != nil {
-		return fmt.Errorf("failed to access repository path: %w", err)
-	}
-	if !stat.IsDir() {
-		return fmt.Errorf("repository path is not a directory: %s", absPath)
-	}
-	cfg.RepoPath = absPath
-
-	// Create a checker
-	chk := checker.NewChecker(cfg)
-
-	// Check the repository
-	results, err := chk.CheckRepository()
-	if err != nil {
-		return fmt.Errorf("error checking repository: %w", err)
-	}
-
-	// Create a reporter
-	rep := reporter.NewReporter(cfg)
-
-	// Report the results
-	if err := rep.ReportResults(results); err != nil {
-		return fmt.Errorf("error reporting results: %w", err)
-	}
-
-	// Fix missing files if requested
-	if cfg.Fix {
-		if err := chk.FixMissingFiles(results); err != nil {
-			return fmt.Errorf("error fixing missing files: %w", err)
-		}
-
-		// Check the repository again after fixing
-		results, err = chk.CheckRepository()
-		if err != nil {
-			return fmt.Errorf("error checking repository after fixing: %w", err)
-		}
-
-		// Report the results again
-		if !cfg.JSONOutput {
-			fmt.Println("\nAfter fixing:")
-		}
-		if err := rep.ReportResults(results); err != nil {
-			return fmt.Errorf("error reporting results after fixing: %w", err)
-		}
-	}
-
-	// Return an error if there are missing must-have files
-	for _, result := range results {
-		if result.Error != nil {
-			return fmt.Errorf("error validating repository: %s", rep.GetSummary(results))
-		}
-
-		if !result.Exists && result.Requirement.Priority == config.PriorityMustHave {
-			return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
-		}
-	}
-
-	return nil
-}
