@@ -30,10 +30,34 @@ go build -o repo-validate
 
 ### Options
 
+**Basic Options:**
 - `--path`: Path to the repository to validate (default: current directory)
 - `--fix`: Generate missing files based on templates
 - `--dry-run`: Only report issues without making changes
 - `--json`: Output results in JSON format
+
+**File Group Options:**
+- `--all`: Check all optional file groups
+- `--augment`: Check Augment AI related files (.augment-guidelines, .augmentignore)
+- `--docker`: Check Docker related files (Dockerfile, docker-compose.yaml, .dockerignore)
+- `--typescript`: Check TypeScript/JavaScript related files (package.json, tsconfig.json)
+- `--devcontainer`: Check DevContainer related files (.devcontainer.json)
+- `--devenv`: Check DevEnv related files (devenv.nix)
+
+By default, only the core files (README.md, LICENSE.md, .gitignore, SECURITY.md) are checked. Use the file group options to check additional files.
+
+**Example Usage:**
+
+```bash
+# Check a TypeScript project with Docker support
+./repo-validate --typescript --docker
+
+# Check all possible files in a repository
+./repo-validate --all
+
+# Generate missing files for a TypeScript project
+./repo-validate --typescript --fix
+```
 
 ### Exit Codes
 
