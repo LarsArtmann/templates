@@ -5,6 +5,7 @@ import (
 
 	"github.com/LarsArtmann/templates/repo-validation/internal/checker"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
+	"github.com/LarsArtmann/templates/repo-validation/internal/errors"
 	"github.com/LarsArtmann/templates/repo-validation/internal/reporter"
 )
 
@@ -81,7 +82,7 @@ func (c *ValidateCommand) Execute() error {
 
 	// Return an error if there are any issues
 	if hasErrors {
-		return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
+		return errors.NewMissingMustHaveFilesError(rep.GetSummary(results))
 	}
 
 	return nil

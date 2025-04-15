@@ -7,6 +7,7 @@ import (
 
 	"github.com/LarsArtmann/templates/repo-validation/internal/checker"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
+	"github.com/LarsArtmann/templates/repo-validation/internal/errors"
 	"github.com/LarsArtmann/templates/repo-validation/internal/reporter"
 )
 
@@ -27,26 +28,26 @@ func Run(opts ...config.ConfigOption) error {
 		// If interactive mode is enabled, prompt for missing parameters
 		if cfg.Interactive {
 			if err := PromptForMissingParameters(cfg); err != nil {
-				return err
+				return errors.NewInvalidConfigError(err.Error())
 			}
 		} else {
-			return err
+			return errors.NewInvalidConfigError(err.Error())
 		}
 	}
 
 	// Resolve the repository path to an absolute path
 	absPath, err := filepath.Abs(cfg.RepoPath)
 	if err != nil {
-		return fmt.Errorf("failed to resolve repository path: %w", err)
+		return errors.NewPathError(cfg.RepoPath, err)
 	}
 
 	// Check if the path exists and is a directory
 	stat, err := os.Stat(absPath)
 	if err != nil {
-		return fmt.Errorf("failed to access repository path: %w", err)
+		return errors.NewFileAccessError(absPath, err)
 	}
 	if !stat.IsDir() {
-		return fmt.Errorf("repository path is not a directory: %s", absPath)
+		return errors.NewPathError(absPath, fmt.Errorf("path is not a directory"))
 	}
 	cfg.RepoPath = absPath
 
@@ -110,7 +111,7 @@ func Run(opts ...config.ConfigOption) error {
 
 	// Return an error if there are any issues
 	if hasErrors {
-		return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
+		return errors.NewMissingMustHaveFilesError(rep.GetSummary(results))
 	}
 
 	return nil
