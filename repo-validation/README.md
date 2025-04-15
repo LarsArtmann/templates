@@ -58,6 +58,9 @@ repo-validate --help
 
 # Run in interactive mode
 repo-validate --interactive
+
+# Show version information
+repo-validate --version
 ```
 
 ### Options
@@ -68,6 +71,7 @@ repo-validate --interactive
 - `--dry-run`: Only report issues without making changes
 - `--json`: Output results in JSON format
 - `--interactive`: Prompt for missing parameters instead of failing
+- `--version`: Show version information and exit
 
 **File Group Options:**
 - `--all`: Check all optional file groups

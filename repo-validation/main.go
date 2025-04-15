@@ -12,8 +12,12 @@ import (
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
 )
 
+// Version is the current version of the repository validation script
+const Version = "0.1.0"
+
 func main() {
 	// Parse command-line flags
+	version := flag.Bool("version", false, "Show version information")
 	dryRun := flag.Bool("dry-run", false, "Only report issues without making changes")
 	fix := flag.Bool("fix", false, "Generate missing files")
 	jsonOutput := flag.Bool("json", false, "Output results in JSON format")
@@ -29,6 +33,12 @@ func main() {
 	checkAll := flag.Bool("all", false, "Check all optional file groups")
 
 	flag.Parse()
+
+	// If --version is specified, print version information and exit
+	if *version {
+		fmt.Printf("Repository Validation Script v%s\n", Version)
+		os.Exit(0)
+	}
 
 	// If --all is specified, enable all optional file groups
 	if *checkAll {
