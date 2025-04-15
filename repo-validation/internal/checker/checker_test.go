@@ -89,8 +89,10 @@ func TestCheckRepository(t *testing.T) {
 }
 
 func TestFixMissingFiles(t *testing.T) {
-	// This test is more of an integration test and requires actual templates
-	// For unit testing, we'll mock the behavior instead
+	// Note: We're only testing the case where there's no template.
+	// Testing with an actual template would require setting up a complex directory structure
+	// and would be more of an integration test. In a real-world scenario, this would be better
+	// tested with a mock filesystem or by injecting the template reading functionality.
 
 	// Setup test directory
 	tempDir := setupTestDir(t)
@@ -103,30 +105,33 @@ func TestFixMissingFiles(t *testing.T) {
 	}
 	chk := NewChecker(cfg)
 
-	// Create a test result with a missing file but no template
-	// This should be skipped without error
-	results := []ValidationResult{
-		{
-			Requirement: config.FileRequirement{
-				Path:         "CONTRIBUTING.md",
-				Priority:     config.PriorityMustHave,
-				TemplatePath: "", // No template
+	// Test case 1: Missing file with no template
+	t.Run("missing file with no template", func(t *testing.T) {
+		// Create a test result with a missing file but no template
+		// This should be skipped without error
+		results := []ValidationResult{
+			{
+				Requirement: config.FileRequirement{
+					Path:         "CONTRIBUTING.md",
+					Priority:     config.PriorityMustHave,
+					TemplatePath: "", // No template
+				},
+				Exists: false,
 			},
-			Exists: false,
-		},
-	}
+		}
 
-	// Fix the missing files
-	err := chk.FixMissingFiles(results)
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+		// Fix the missing files
+		err := chk.FixMissingFiles(results)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 
-	// The file should not be created since there's no template
-	contributingPath := filepath.Join(tempDir, "CONTRIBUTING.md")
-	if _, err := os.Stat(contributingPath); !os.IsNotExist(err) {
-		t.Errorf("Expected file %s to not exist, but it does", contributingPath)
-	}
+		// The file should not be created since there's no template
+		contributingPath := filepath.Join(tempDir, "CONTRIBUTING.md")
+		if _, err := os.Stat(contributingPath); !os.IsNotExist(err) {
+			t.Errorf("Expected file %s to not exist, but it does", contributingPath)
+		}
+	})
 }
 
 func TestCheckFile(t *testing.T) {
