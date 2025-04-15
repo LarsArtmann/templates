@@ -8,6 +8,7 @@ import (
 	"github.com/LarsArtmann/templates/repo-validation/internal/checker"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
 	"github.com/LarsArtmann/templates/repo-validation/internal/errors"
+	"github.com/LarsArtmann/templates/repo-validation/internal/exitcode"
 	"github.com/LarsArtmann/templates/repo-validation/internal/reporter"
 )
 
@@ -89,29 +90,16 @@ func Run(opts ...config.ConfigOption) error {
 		}
 	}
 
-	// Check for errors and missing must-have files
-	var hasErrors bool
-	var firstError error
-	for _, result := range results {
-		if result.Error != nil {
-			hasErrors = true
-			if firstError == nil {
-				firstError = result.Error
-			}
-			continue
+	// Use the reporter to determine if we should exit with an error
+	exitCode := rep.GetExitCode(results)
+	if exitCode != exitcode.Success {
+		// Return an appropriate error based on the exit code
+		switch exitCode {
+		case exitcode.MissingMustHaveFiles:
+			return errors.NewMissingMustHaveFilesError(rep.GetSummary(results))
+		default:
+			return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
 		}
-
-		if !result.Exists && result.Requirement.Priority == config.PriorityMustHave {
-			hasErrors = true
-			if firstError == nil {
-				firstError = fmt.Errorf("missing must-have file: %s", result.Requirement.Path)
-			}
-		}
-	}
-
-	// Return an error if there are any issues
-	if hasErrors {
-		return errors.NewMissingMustHaveFilesError(rep.GetSummary(results))
 	}
 
 	return nil
