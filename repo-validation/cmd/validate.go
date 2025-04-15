@@ -72,7 +72,7 @@ func (c *ValidateCommand) Execute() error {
 			continue
 		}
 
-		if !result.Exists && result.Requirement.Priority == "Must-have" {
+		if !result.Exists && result.Requirement.Priority == config.PriorityMustHave {
 			hasErrors = true
 			if firstError == nil {
 				firstError = fmt.Errorf("missing must-have file: %s", result.Requirement.Path)
