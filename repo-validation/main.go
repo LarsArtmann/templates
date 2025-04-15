@@ -17,10 +17,27 @@ func main() {
 	jsonOutput := flag.Bool("json", false, "Output results in JSON format")
 	repoPath := flag.String("path", ".", "Path to the repository to validate")
 
+	// Optional file group flags
+	checkAugment := flag.Bool("augment", false, "Check Augment AI related files (.augment-guidelines, .augmentignore)")
+	checkDocker := flag.Bool("docker", false, "Check Docker related files (Dockerfile, docker-compose.yaml, .dockerignore)")
+	checkTypeScript := flag.Bool("typescript", false, "Check TypeScript/JavaScript related files (package.json, tsconfig.json)")
+	checkDevContainer := flag.Bool("devcontainer", false, "Check DevContainer related files (.devcontainer.json)")
+	checkDevEnv := flag.Bool("devenv", false, "Check DevEnv related files (devenv.nix)")
+	checkAll := flag.Bool("all", false, "Check all optional file groups")
+
 	flag.Parse()
 
+	// If --all is specified, enable all optional file groups
+	if *checkAll {
+		*checkAugment = true
+		*checkDocker = true
+		*checkTypeScript = true
+		*checkDevContainer = true
+		*checkDevEnv = true
+	}
+
 	// Run the application
-	if err := run(*dryRun, *fix, *jsonOutput, *repoPath); err != nil {
+	if err := run(*dryRun, *fix, *jsonOutput, *repoPath, *checkAugment, *checkDocker, *checkTypeScript, *checkDevContainer, *checkDevEnv); err != nil {
 		if *jsonOutput {
 			// Output error in JSON format
 			fmt.Printf("{\"error\": \"%s\"}\n", err.Error())
@@ -33,13 +50,18 @@ func main() {
 }
 
 // run executes the main application logic
-func run(dryRun, fix, jsonOutput bool, repoPath string) error {
+func run(dryRun, fix, jsonOutput bool, repoPath string, checkAugment, checkDocker, checkTypeScript, checkDevContainer, checkDevEnv bool) error {
 	// Create the configuration
 	cfg := &config.Config{
-		DryRun:     dryRun,
-		Fix:        fix,
-		JSONOutput: jsonOutput,
-		RepoPath:   repoPath,
+		DryRun:          dryRun,
+		Fix:             fix,
+		JSONOutput:      jsonOutput,
+		RepoPath:        repoPath,
+		CheckAugment:    checkAugment,
+		CheckDocker:     checkDocker,
+		CheckTypeScript: checkTypeScript,
+		CheckDevContainer: checkDevContainer,
+		CheckDevEnv:     checkDevEnv,
 	}
 
 	// Resolve the repository path to an absolute path
