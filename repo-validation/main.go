@@ -7,6 +7,8 @@ import (
 
 	"github.com/LarsArtmann/templates/repo-validation/cmd"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
+	"github.com/LarsArtmann/templates/repo-validation/internal/errors"
+	"github.com/LarsArtmann/templates/repo-validation/internal/exitcode"
 )
 
 // Version is the current version of the repository validation script
@@ -70,14 +72,28 @@ func main() {
 
 	// Run the application with the options
 	if err := cmd.Run(options...); err != nil {
+		// Determine the exit code based on the error type
+		exitCode := exitcode.GeneralError
+
+		switch err.(type) {
+		case *errors.PathError:
+			exitCode = exitcode.PathError
+		case *errors.FileAccessError:
+			exitCode = exitcode.FileAccessError
+		case *errors.InvalidConfigError:
+			exitCode = exitcode.InvalidConfig
+		case *errors.MissingMustHaveFilesError:
+			exitCode = exitcode.MissingMustHaveFiles
+		}
+
 		if *jsonOutput {
 			// Output error in JSON format
-			fmt.Printf("{\"error\": \"%s\"}\n", err.Error())
+			fmt.Printf("{\"error\": \"%s\", \"code\": %d}\n", err.Error(), exitCode)
 		} else {
 			// Output error in human-readable format
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error: %v (code: %d)\n", err, exitCode)
 		}
-		os.Exit(1)
+		os.Exit(exitCode)
 	}
 }
 
