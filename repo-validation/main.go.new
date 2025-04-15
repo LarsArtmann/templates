@@ -1,0 +1,9 @@
+package main
+
+import (
+	"github.com/LarsArtmann/templates/repo-validation/cmd"
+)
+
+func main() {
+	cmd.Execute()
+}
