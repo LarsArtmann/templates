@@ -9,6 +9,7 @@ import (
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
 	"github.com/LarsArtmann/templates/repo-validation/internal/errors"
 	"github.com/LarsArtmann/templates/repo-validation/internal/exitcode"
+	"github.com/charmbracelet/log"
 )
 
 // Version is the current version of the repository validation script
@@ -90,8 +91,8 @@ func main() {
 			// Output error in JSON format
 			fmt.Printf("{\"error\": \"%s\", \"code\": %d}\n", err.Error(), exitCode)
 		} else {
-			// Output error in human-readable format
-			fmt.Fprintf(os.Stderr, "Error: %v (code: %d)\n", err, exitCode)
+			// Output error in human-readable format with color
+			log.Error("Validation failed", "error", err, "code", exitCode)
 		}
 		os.Exit(exitCode)
 	}
