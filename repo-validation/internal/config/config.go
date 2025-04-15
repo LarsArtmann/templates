@@ -55,6 +55,7 @@ func WithFileGroup(group string, enabled bool) ConfigOption {
 		case "devenv":
 			c.CheckDevEnv = enabled
 		case "all":
+			c.CheckAll = enabled
 			c.CheckAugment = enabled
 			c.CheckDocker = enabled
 			c.CheckTypeScript = enabled
@@ -94,6 +95,7 @@ type Config struct {
 	Interactive bool
 
 	// File group flags
+	CheckAll         bool // Check all file groups
 	CheckAugment     bool // Check Augment AI related files (.augment-guidelines, .augmentignore)
 	CheckDocker      bool // Check Docker related files (Dockerfile, docker-compose.yaml, .dockerignore)
 	CheckTypeScript  bool // Check TypeScript/JavaScript related files (package.json, tsconfig.json)
@@ -121,6 +123,11 @@ func (c *Config) Validate(opts ...ValidationOption) error {
 		return fmt.Errorf("--json and --interactive cannot be used together")
 	}
 
+	// Validate file groups when --all is used
+	if err := ValidateFileGroups(c); err != nil {
+		return err
+	}
+
 	// Apply additional validation options
 	for _, opt := range opts {
 		if err := opt(c); err != nil {
@@ -131,14 +138,20 @@ func (c *Config) Validate(opts ...ValidationOption) error {
 	return nil
 }
 
-// ValidateFileGroups checks if at least one file group is selected when using --all
+// ValidateFileGroups checks if at least one file group is selected when the --all flag is used
 func ValidateFileGroups(c *Config) error {
+	// If the --all flag is not set, we don't need to validate file groups
+	if !c.CheckAll {
+		return nil
+	}
+
+	// If --all is set, at least one file group should be selected
 	if c.CheckAugment || c.CheckDocker || c.CheckTypeScript || c.CheckDevContainer || c.CheckDevEnv {
 		return nil
 	}
 
-	// No file groups selected, which is fine for checking core files only
-	return nil
+	// No file groups selected with --all flag
+	return fmt.Errorf("no file groups selected, use at least one of --augment, --docker, etc., or remove --all flag")
 }
 
 // FileRequirement represents a file that should be present in a repository

@@ -100,7 +100,7 @@ func TestConfigOptions(t *testing.T) {
 				group:   "all",
 				enabled: true,
 				check: func(c *Config) bool {
-					return c.CheckAugment && c.CheckDocker && c.CheckTypeScript && c.CheckDevContainer && c.CheckDevEnv
+					return c.CheckAll && c.CheckAugment && c.CheckDocker && c.CheckTypeScript && c.CheckDevContainer && c.CheckDevEnv
 				},
 			},
 		}
@@ -160,6 +160,30 @@ func TestConfigValidate(t *testing.T) {
 		}
 		if err := cfg.Validate(); err == nil {
 			t.Errorf("Expected error for JSON output with interactive mode, got nil")
+		}
+	})
+
+	// Test --all flag with no file groups
+	t.Run("all flag with no file groups", func(t *testing.T) {
+		cfg := &Config{
+			RepoPath: "/test/path",
+			CheckAll: true,
+			// No file groups enabled
+		}
+		if err := cfg.Validate(); err == nil {
+			t.Errorf("Expected error for --all flag with no file groups, got nil")
+		}
+	})
+
+	// Test --all flag with file groups
+	t.Run("all flag with file groups", func(t *testing.T) {
+		cfg := &Config{
+			RepoPath:     "/test/path",
+			CheckAll:     true,
+			CheckAugment: true,
+		}
+		if err := cfg.Validate(); err != nil {
+			t.Errorf("Expected no error for --all flag with file groups, got %v", err)
 		}
 	})
 
