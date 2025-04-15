@@ -55,6 +55,9 @@ repo-validate --json
 
 # Show help
 repo-validate --help
+
+# Run in interactive mode
+repo-validate --interactive
 ```
 
 ### Options
@@ -64,6 +67,7 @@ repo-validate --help
 - `--fix`: Generate missing files based on templates
 - `--dry-run`: Only report issues without making changes
 - `--json`: Output results in JSON format
+- `--interactive`: Prompt for missing parameters instead of failing
 
 **File Group Options:**
 - `--all`: Check all optional file groups
@@ -74,6 +78,16 @@ repo-validate --help
 - `--devenv`: Check DevEnv related files (devenv.nix)
 
 By default, only the core files (README.md, LICENSE.md, .gitignore, SECURITY.md) are checked. Use the file group options to check additional files.
+
+### Interactive Mode
+
+When running with the `--interactive` flag, the tool will prompt for missing parameters instead of failing. This is useful when:
+
+- You're not sure which file groups to check
+- You've specified incompatible options (like `--dry-run` and `--fix` together)
+- You want to be guided through the validation process
+
+The interactive mode provides a simple command-line interface for selecting options:
 
 **Example Usage:**
 
