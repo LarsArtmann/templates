@@ -7,6 +7,7 @@ import (
 
 	"github.com/LarsArtmann/templates/repo-validation/internal/checker"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
+	"github.com/LarsArtmann/templates/repo-validation/internal/exitcode"
 	"github.com/charmbracelet/log"
 )
 
@@ -165,4 +166,26 @@ func (r *Reporter) GetSummary(results []checker.ValidationResult) string {
 	}
 
 	return summary.String()
+}
+
+// ShouldExitWithError returns true if there are missing must-have files or errors
+// This helps the caller determine the correct exit code
+func (r *Reporter) ShouldExitWithError(results []checker.ValidationResult) bool {
+	missingMustHave, _, errors := r.processResults(results)
+	return len(missingMustHave) > 0 || len(errors) > 0
+}
+
+// GetExitCode returns the appropriate exit code based on the validation results
+func (r *Reporter) GetExitCode(results []checker.ValidationResult) int {
+	missingMustHave, _, errors := r.processResults(results)
+
+	if len(errors) > 0 {
+		return exitcode.GeneralError
+	}
+
+	if len(missingMustHave) > 0 {
+		return exitcode.MissingMustHaveFiles
+	}
+
+	return exitcode.Success
 }

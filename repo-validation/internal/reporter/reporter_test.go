@@ -5,6 +5,7 @@ import (
 
 	"github.com/LarsArtmann/templates/repo-validation/internal/checker"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
+	"github.com/LarsArtmann/templates/repo-validation/internal/exitcode"
 )
 
 func TestReporter_GetSummary(t *testing.T) {
@@ -141,17 +142,17 @@ func TestReporter_ProcessResults(t *testing.T) {
 				Config: &config.Config{},
 			}
 			gotMissingMustHave, gotMissingShouldHave, gotErrors := r.processResults(tt.results)
-			
+
 			// Check missing must-have files
 			if !stringSlicesEqual(gotMissingMustHave, tt.wantMissingMustHave) {
 				t.Errorf("Reporter.processResults() missingMustHave = %v, want %v", gotMissingMustHave, tt.wantMissingMustHave)
 			}
-			
+
 			// Check missing should-have files
 			if !stringSlicesEqual(gotMissingShouldHave, tt.wantMissingShouldHave) {
 				t.Errorf("Reporter.processResults() missingShouldHave = %v, want %v", gotMissingShouldHave, tt.wantMissingShouldHave)
 			}
-			
+
 			// Check errors
 			if !stringSlicesEqual(gotErrors, tt.wantErrors) {
 				t.Errorf("Reporter.processResults() errors = %v, want %v", gotErrors, tt.wantErrors)
@@ -171,6 +172,132 @@ func stringSlicesEqual(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func TestReporter_ShouldExitWithError(t *testing.T) {
+	tests := []struct {
+		name    string
+		results []checker.ValidationResult
+		want    bool
+	}{
+		{
+			name: "all files present",
+			results: []checker.ValidationResult{
+				{
+					Requirement: config.FileRequirement{Path: "README.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+				},
+				{
+					Requirement: config.FileRequirement{Path: "LICENSE.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+				},
+			},
+			want: false,
+		},
+		{
+			name: "missing must-have files",
+			results: []checker.ValidationResult{
+				{
+					Requirement: config.FileRequirement{Path: "README.md", Priority: config.PriorityMustHave},
+					Exists:      false,
+				},
+				{
+					Requirement: config.FileRequirement{Path: "LICENSE.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+				},
+			},
+			want: true,
+		},
+		{
+			name: "errors",
+			results: []checker.ValidationResult{
+				{
+					Requirement: config.FileRequirement{Path: "README.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+					Error:       nil,
+				},
+				{
+					Requirement: config.FileRequirement{Path: "SECURITY.md", Priority: config.PriorityMustHave},
+					Error:       &testError{message: "test error"},
+				},
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Reporter{
+				Config: &config.Config{},
+			}
+			if got := r.ShouldExitWithError(tt.results); got != tt.want {
+				t.Errorf("Reporter.ShouldExitWithError() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestReporter_GetExitCode(t *testing.T) {
+	tests := []struct {
+		name    string
+		results []checker.ValidationResult
+		want    int
+	}{
+		{
+			name: "all files present",
+			results: []checker.ValidationResult{
+				{
+					Requirement: config.FileRequirement{Path: "README.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+				},
+				{
+					Requirement: config.FileRequirement{Path: "LICENSE.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+				},
+			},
+			want: exitcode.Success,
+		},
+		{
+			name: "missing must-have files",
+			results: []checker.ValidationResult{
+				{
+					Requirement: config.FileRequirement{Path: "README.md", Priority: config.PriorityMustHave},
+					Exists:      false,
+				},
+				{
+					Requirement: config.FileRequirement{Path: "LICENSE.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+				},
+			},
+			want: exitcode.MissingMustHaveFiles,
+		},
+		{
+			name: "errors",
+			results: []checker.ValidationResult{
+				{
+					Requirement: config.FileRequirement{Path: "README.md", Priority: config.PriorityMustHave},
+					Exists:      true,
+					Error:       nil,
+				},
+				{
+					Requirement: config.FileRequirement{Path: "SECURITY.md", Priority: config.PriorityMustHave},
+					Error:       &testError{message: "test error"},
+				},
+			},
+			want: exitcode.GeneralError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Reporter{
+				Config: &config.Config{},
+			}
+			if got := r.GetExitCode(tt.results); got != tt.want {
+				t.Errorf("Reporter.GetExitCode() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
 // testError is a simple error implementation for testing
