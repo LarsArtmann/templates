@@ -63,6 +63,31 @@ repo-validate --interactive
 repo-validate --version
 ```
 
+### Common Workflows
+
+```bash
+# Full validation with fixes and all file groups
+repo-validate --all --fix
+
+# TypeScript project with Docker validation, JSON output
+repo-validate --typescript --docker --json
+
+# CI/CD pipeline usage
+repo-validate --all --json
+
+# Interactive mode with specific file groups
+repo-validate --typescript --docker --interactive
+
+# Dry run with all file groups (preview what would be checked)
+repo-validate --all --dry-run
+
+# Fix missing files in a specific path
+repo-validate --path /path/to/repo --fix
+
+# Validate DevContainer and DevEnv configuration
+repo-validate --devcontainer --devenv
+```
+
 ### Options
 
 **Basic Options:**
@@ -117,7 +142,11 @@ The interactive mode provides a simple command-line interface for selecting opti
 ### Exit Codes
 
 - `0`: Success - all must-have files are present
-- `1`: Error - some must-have files are missing or an error occurred
+- `1`: General error or failure
+- `2`: Path resolution error
+- `3`: Missing must-have files
+- `4`: Invalid configuration options
+- `5`: File access or permission error
 
 ### Example Output
 
@@ -297,7 +326,7 @@ sequenceDiagram
     Checker-->>-Command: ValidationResults
     Command->>+Reporter: ReportResults(results)
     Reporter-->>-Command: (report displayed)
-    
+
     alt Fix requested && missing files detected
         Command->>+Checker: FixMissingFiles(results)
         Checker-->>-Command: (fixes applied)
@@ -306,7 +335,7 @@ sequenceDiagram
         Command->>+Reporter: ReportResults(updated results)
         Reporter-->>-Command: (updated report displayed)
     end
-    
+
     Command-->>-Main: error (if any)
     deactivate Command
     Main-->>-User: Output results / error
