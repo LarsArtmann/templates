@@ -101,8 +101,11 @@ type Config struct {
 	CheckDevEnv      bool // Check DevEnv related files (devenv.nix)
 }
 
+// ValidationOption is a function that performs additional validation on a Config
+type ValidationOption func(*Config) error
+
 // Validate checks if the configuration is valid and returns an error if not
-func (c *Config) Validate() error {
+func (c *Config) Validate(opts ...ValidationOption) error {
 	// Check for incompatible parameters
 	if c.DryRun && c.Fix {
 		return fmt.Errorf("--dry-run and --fix cannot be used together")
@@ -113,6 +116,28 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("repository path cannot be empty")
 	}
 
+	// Check if JSON output is enabled with interactive mode
+	if c.JSONOutput && c.Interactive {
+		return fmt.Errorf("--json and --interactive cannot be used together")
+	}
+
+	// Apply additional validation options
+	for _, opt := range opts {
+		if err := opt(c); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ValidateFileGroups checks if at least one file group is selected when using --all
+func ValidateFileGroups(c *Config) error {
+	if c.CheckAugment || c.CheckDocker || c.CheckTypeScript || c.CheckDevContainer || c.CheckDevEnv {
+		return nil
+	}
+
+	// No file groups selected, which is fine for checking core files only
 	return nil
 }
 

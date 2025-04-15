@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -147,6 +148,50 @@ func TestConfigValidate(t *testing.T) {
 		}
 		if err := cfg.Validate(); err == nil {
 			t.Errorf("Expected error for conflicting flags, got nil")
+		}
+	})
+
+	// Test JSON output with interactive mode
+	t.Run("json with interactive", func(t *testing.T) {
+		cfg := &Config{
+			RepoPath:    "/test/path",
+			JSONOutput:  true,
+			Interactive: true,
+		}
+		if err := cfg.Validate(); err == nil {
+			t.Errorf("Expected error for JSON output with interactive mode, got nil")
+		}
+	})
+
+	// Test validation options
+	t.Run("validation options", func(t *testing.T) {
+		cfg := &Config{
+			RepoPath: "/test/path",
+		}
+
+		// Create a validation option that always returns an error
+		opt := func(c *Config) error {
+			return fmt.Errorf("test error")
+		}
+
+		if err := cfg.Validate(opt); err == nil {
+			t.Errorf("Expected error from validation option, got nil")
+		}
+	})
+
+	// Test ValidateFileGroups
+	t.Run("validate file groups", func(t *testing.T) {
+		cfg := &Config{
+			RepoPath: "/test/path",
+		}
+
+		if err := ValidateFileGroups(cfg); err != nil {
+			t.Errorf("Expected no error for empty file groups, got %v", err)
+		}
+
+		cfg.CheckAugment = true
+		if err := ValidateFileGroups(cfg); err != nil {
+			t.Errorf("Expected no error for non-empty file groups, got %v", err)
 		}
 	})
 }
