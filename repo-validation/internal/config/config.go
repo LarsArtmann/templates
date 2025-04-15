@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 // Config represents the configuration for the repository validation script
 type Config struct {
 	// DryRun if true, only report issues without making changes
@@ -10,6 +12,8 @@ type Config struct {
 	JSONOutput bool
 	// RepoPath path to the repository to validate
 	RepoPath string
+	// Interactive if true, prompt for missing parameters
+	Interactive bool
 
 	// File group flags
 	CheckAugment     bool // Check Augment AI related files (.augment-guidelines, .augmentignore)
@@ -17,6 +21,21 @@ type Config struct {
 	CheckTypeScript  bool // Check TypeScript/JavaScript related files (package.json, tsconfig.json)
 	CheckDevContainer bool // Check DevContainer related files (.devcontainer.json)
 	CheckDevEnv      bool // Check DevEnv related files (devenv.nix)
+}
+
+// Validate checks if the configuration is valid and returns an error if not
+func (c *Config) Validate() error {
+	// Check for incompatible parameters
+	if c.DryRun && c.Fix {
+		return fmt.Errorf("--dry-run and --fix cannot be used together")
+	}
+
+	// Check if the repository path exists and is a directory
+	if c.RepoPath == "" {
+		return fmt.Errorf("repository path cannot be empty")
+	}
+
+	return nil
 }
 
 // FileRequirement represents a file that should be present in a repository
