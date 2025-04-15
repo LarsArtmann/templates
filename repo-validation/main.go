@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/LarsArtmann/templates/repo-validation/cmd"
+	"github.com/LarsArtmann/templates/repo-validation/internal/checker"
 	"github.com/LarsArtmann/templates/repo-validation/internal/config"
+	"github.com/LarsArtmann/templates/repo-validation/internal/reporter"
 )
 
 // Version is the current version of the repository validation script
@@ -233,12 +234,51 @@ func run(dryRun, fix, jsonOutput bool, repoPath string, interactive bool, checkA
 	}
 	cfg.RepoPath = absPath
 
-	// Create the validate command
-	validateCmd := cmd.NewValidateCommand(cfg)
+	// Create a checker
+	chk := checker.NewChecker(cfg)
 
-	// Execute the command
-	if err := validateCmd.Execute(); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+	// Check the repository
+	results, err := chk.CheckRepository()
+	if err != nil {
+		return fmt.Errorf("error checking repository: %w", err)
+	}
+
+	// Create a reporter
+	rep := reporter.NewReporter(cfg)
+
+	// Report the results
+	if err := rep.ReportResults(results); err != nil {
+		return fmt.Errorf("error reporting results: %w", err)
+	}
+
+	// Fix missing files if requested
+	if cfg.Fix {
+		if err := chk.FixMissingFiles(results); err != nil {
+			return fmt.Errorf("error fixing missing files: %w", err)
+		}
+
+		// Check the repository again after fixing
+		results, err = chk.CheckRepository()
+		if err != nil {
+			return fmt.Errorf("error checking repository after fixing: %w", err)
+		}
+
+		// Report the results again
+		fmt.Println("\nAfter fixing:")
+		if err := rep.ReportResults(results); err != nil {
+			return fmt.Errorf("error reporting results after fixing: %w", err)
+		}
+	}
+
+	// Return an error if there are missing must-have files
+	for _, result := range results {
+		if result.Error != nil {
+			return fmt.Errorf("error validating repository: %s", rep.GetSummary(results))
+		}
+
+		if !result.Exists && result.Requirement.Priority == "Must-have" {
+			return fmt.Errorf("repository validation failed: %s", rep.GetSummary(results))
+		}
 	}
 
 	return nil
