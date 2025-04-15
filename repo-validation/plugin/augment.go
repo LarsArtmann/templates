@@ -7,6 +7,10 @@ import (
 // AugmentPlugin implements the Augment file group plugin
 type AugmentPlugin struct{}
 
+// The Augment plugin validates files used by AI code assistance tools.
+// .augment-guidelines contains instructions for AI assistants
+// .augmentignore specifies files to exclude from AI analysis
+
 // Name returns the name of the plugin
 func (p *AugmentPlugin) Name() string {
 	return "augment"

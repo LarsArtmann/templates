@@ -7,6 +7,12 @@ import (
 // DevEnvPlugin implements the DevEnv file group plugin
 type DevEnvPlugin struct{}
 
+// DevEnv is a Nix-based developer environment manager (https://devenv.sh/)
+// that provides reproducible and declarative development environments.
+// The devenv.nix file contains the environment definition,
+// devenv.yaml contains project-specific configuration,
+// and devenv.lock is the dependency lockfile.
+
 // Name returns the name of the plugin
 func (p *DevEnvPlugin) Name() string {
 	return "devenv"
