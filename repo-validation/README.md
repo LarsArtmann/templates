@@ -2,6 +2,11 @@
 
 A tool for validating the presence of common project files in a repository. It ensures that repositories follow best practices by checking for essential files and can automatically generate missing files.
 
+```bash
+# Quick install
+go install github.com/LarsArtmann/templates/repo-validation@latest
+```
+
 ## Overview
 
 This validation script helps maintain consistency across repositories by:
